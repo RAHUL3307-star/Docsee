@@ -5,10 +5,10 @@
  * ══════════════════════════════════════════════════════════════════════
  */
 
-// Default Demo / Public Supabase Config (Users can update via UI or localStorage)
+// Default Supabase Config for Project: ydnbeojecurymwtqlntr
 const DEFAULT_SUPABASE_CONFIG = {
-  url: localStorage.getItem('DOCSEE_SUPABASE_URL') || 'https://xyzcompanydocsee.supabase.co',
-  anonKey: localStorage.getItem('DOCSEE_SUPABASE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummykey',
+  url: localStorage.getItem('DOCSEE_SUPABASE_URL') || 'https://ydnbeojecurymwtqlntr.supabase.co',
+  anonKey: localStorage.getItem('DOCSEE_SUPABASE_KEY') || '',
   isConnected: false
 };
 
