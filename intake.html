@@ -532,43 +532,81 @@
     el.classList.add('selected');
     answers[key] = el.textContent;
   }
-  const voiceSamples = {
-    hi:"मुझे 3 हफ्ते से बहुत थकान लग रही है और शाम को सिरदर्द होता है...",
-    mr:"माझ्या छातीत खूप जड वाटत आहे आणि श्वास घेणे कठीण होत आहे...",
-    kn:"ನನಗೆ 3 ವಾರಗಳಿಂದ ತಲೆನೋವು ಮತ್ತು ತೀವ್ರ ಆಯಾಸ ಆಗುತ್ತಿದೆ...",
-    default:"I have been having chest pain and breathlessness for 2 hours, started while walking..."
-  };
-  const voiceTranslations = {
-    hi:"I have been experiencing severe fatigue for 3 weeks and headaches in the evenings...",
-    mr:"I feel heavy in my chest and am having difficulty breathing...",
-    kn:"I have been having headaches and severe fatigue for 3 weeks...",
-    default:""
-  };
+  let speechRecognition = null;
+  let isListening = false;
+  const speechLangCodes = { en:'en-IN', hi:'hi-IN', bn:'bn-IN', te:'te-IN', mr:'mr-IN', ta:'ta-IN', gu:'gu-IN', kn:'kn-IN' };
+
   function toggleVoice() {
     const btn = document.getElementById('voice-btn');
     const textarea = document.getElementById('complaint-text');
     const transl = document.getElementById('voice-translation');
-    if (!voiceActive) {
-      voiceActive = true;
-      btn.className = 'voice-btn recording';
-      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop`;
-      const sample = voiceSamples[selectedLang] || voiceSamples.default;
-      textarea.value = ''; let i = 0;
-      voiceTimer = setInterval(() => {
-        textarea.value = sample.slice(0, ++i);
-        if (i >= sample.length) {
-          clearInterval(voiceTimer);
-          if (selectedLang && selectedLang !== 'en') {
-            transl.classList.add('show');
-            document.getElementById('translation-text').textContent = voiceTranslations[selectedLang] || voiceTranslations.default;
+    const translText = document.getElementById('translation-text');
+
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRec) {
+      showToast("⚠️ Microphone speech recognition not supported in this browser. Please use Chrome/Edge or type directly.");
+      return;
+    }
+
+    if (isListening && speechRecognition) {
+      speechRecognition.stop();
+      return;
+    }
+
+    try {
+      speechRecognition = new SpeechRec();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+      speechRecognition.lang = speechLangCodes[selectedLang] || 'en-IN';
+
+      speechRecognition.onstart = () => {
+        isListening = true;
+        btn.className = 'voice-btn recording';
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> 🔴 Listening... Click to Stop`;
+        showToast(`🎙 Microphone active (${langNames[selectedLang] || 'English'}). Speak now!`);
+      };
+
+      let initialText = textarea.value ? textarea.value.trim() + ' ' : '';
+
+      speechRecognition.onresult = (event) => {
+        let interimText = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            initialText += event.results[i][0].transcript + ' ';
+          } else {
+            interimText += event.results[i][0].transcript;
           }
-          toggleVoice();
         }
-      }, 40);
-    } else {
-      voiceActive = false; clearInterval(voiceTimer);
-      btn.className = 'voice-btn';
-      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg> 🎙 Speak`;
+        textarea.value = (initialText + interimText).trim();
+
+        if (transl && translText && textarea.value) {
+          transl.classList.add('show');
+          translText.textContent = `"${textarea.value}"`;
+        }
+      };
+
+      speechRecognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          showToast("⚠️ Microphone access denied. Please allow microphone permissions in your browser.");
+        } else if (event.error === 'no-speech') {
+          showToast("ℹ️ No voice detected. Please speak clearly into your mic.");
+        } else {
+          showToast("Mic status: " + event.error);
+        }
+      };
+
+      speechRecognition.onend = () => {
+        isListening = false;
+        btn.className = 'voice-btn';
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg> 🎙 Speak`;
+      };
+
+      speechRecognition.start();
+    } catch (err) {
+      console.error('Speech recognition exception:', err);
+      showToast("⚠️ Mic error: " + err.message);
     }
   }
   function toggleCheck(item) { item.classList.toggle('checked'); }
