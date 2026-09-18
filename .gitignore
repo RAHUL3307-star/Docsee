@@ -1,0 +1,45 @@
+# Temporary / scratch files
+temp_skills/
+scratch_skills/
+
+# Large raw data dumps (not project source)
+ayush_bundle.js
+ayush_dashboard_data.json
+ayush_dashboard_raw.html
+exact_page.html
+extracted_styles.css
+page_extracted_data.json
+clean_root.html
+downloaded_index.html
+replit_page.html
+latest_replit.html
+root_content.html
+fetched_*.html
+
+# Screenshots / debug images
+ayush_dashboard_screenshot.png
+dashboard_ayush_screenshot.png
+dashboard_docs_screenshot.png
+dashboard_new_screenshot.png
+dashboard_trans_screenshot.png
+test_ayush_screenshot.png
+medikiosk_full_exact.png
+
+# Scratch/debug scripts
+analyze_html.py
+inspect_page.py
+inspect_root.py
+scratch_clean.py
+search_transcript.py
+generate_landing_page.py
+fetch_sources.js
+cdp_capture.js
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
