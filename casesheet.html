@@ -985,6 +985,54 @@
         }, 3000);
       }, 900);
     }
+
+    // Dynamic Supabase Case Sheet Loader
+    async function loadDynamicCaseSheets() {
+      if (window.DocSeeDB) {
+        const localCases = JSON.parse(localStorage.getItem('DOCSEE_LOCAL_CASES_V1') || '{}');
+        const select = document.getElementById('patient-select');
+        Object.keys(localCases).forEach(token => {
+          const c = localCases[token];
+          const optVal = 'dyn-' + token.replace('-', '');
+          if (!document.querySelector(`#patient-select option[value="${optVal}"]`)) {
+            const opt = document.createElement('option');
+            opt.value = optVal;
+            opt.textContent = `${c.patient_name} (${token}) - ${c.chief_complaint}`;
+            select.appendChild(opt);
+
+            caseSheetsData[optVal] = {
+              name: c.patient_name,
+              ageSex: `${c.age} Yrs / ${c.gender}`,
+              token: token,
+              abha: '91-' + Math.floor(1000+Math.random()*9000) + '-' + Math.floor(1000+Math.random()*9000) + '-' + Math.floor(1000+Math.random()*9000),
+              vitalsMeta: "DocSee Kiosk Auto-Triaged · Just now",
+              contact: "+91 98XXX-XXXXX",
+              bp: `${c.vitals?.bpSys || 120}/${c.vitals?.bpDia || 80} mmHg`,
+              pulse: `${c.vitals?.hr || 74} bpm`,
+              spo2: `${c.vitals?.spo2 || 98}%`,
+              temp: `${c.vitals?.temp || 98.6}°F`,
+              resp: "16 /min",
+              rbs: `${c.vitals?.rbs || 105} mg/dL`,
+              hpi: `Patient presents via DocSee kiosk with <strong>${c.chief_complaint}</strong>. ${c.symptoms_narrative || ''} Follow-up questions confirmed clinical presentation. Priority classification: <strong>${c.priority_level}</strong>.`,
+              chronic: (c.existing_conditions && c.existing_conditions.length) ? c.existing_conditions.join(', ') : "None reported",
+              surgical: c.past_surgeries || "None reported",
+              allergies: c.known_allergies || "NKDA",
+              allopathic: [
+                { code: "R07.9", desc: c.chief_complaint },
+                { code: "Z00.00", desc: "General adult medical examination" }
+              ],
+              ayush: [
+                { code: "PR-01", desc: "Vata-Pitta Prakriti Imbalance" },
+                { code: "AM-03", desc: "Mild Agnimandya / Mandagni" }
+              ]
+            };
+          }
+        });
+      }
+    }
+    window.addEventListener('DOMContentLoaded', loadDynamicCaseSheets);
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
 </body>
 </html>

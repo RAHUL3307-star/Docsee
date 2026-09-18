@@ -107,6 +107,10 @@
           </h1>
         </div>
         <div class="top-actions">
+          <button id="btn-supabase-modal" style="display:flex; align-items:center; gap:6px; background:var(--teal-light); border:1px solid #ccede9; padding:5px 11px; border-radius:20px; font-size:11px; font-weight:700; color:var(--teal-dark); cursor:pointer; transition:all 0.2s;" title="Supabase Database Settings">
+            <span style="width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 5px #10b981;"></span>
+            <span>⚡ Supabase Cloud DB</span>
+          </button>
           <div class="live-pill">
             <span class="live-dot"></span>
             <span>Live queue 18</span>
@@ -1273,12 +1277,137 @@
       }
     });
 
+    // Supabase DB Modal
+    const supabaseModal = document.getElementById('supabase-modal');
+    const btnSupabaseModal = document.getElementById('btn-supabase-modal');
+    const closeSupabaseModal = document.getElementById('close-supabase-modal');
+    const btnSaveSupabase = document.getElementById('btn-save-supabase');
+    const inputSupabaseUrl = document.getElementById('supabase-url-input');
+    const inputSupabaseKey = document.getElementById('supabase-key-input');
+    const supabaseStatusText = document.getElementById('supabase-status-text');
+
+    if (btnSupabaseModal && supabaseModal) {
+      btnSupabaseModal.addEventListener('click', () => {
+        if (window.DocSeeDB) {
+          inputSupabaseUrl.value = window.DocSeeDB.config.url || '';
+          inputSupabaseKey.value = window.DocSeeDB.config.anonKey || '';
+        }
+        supabaseModal.style.display = 'flex';
+      });
+      closeSupabaseModal.addEventListener('click', () => { supabaseModal.style.display = 'none'; });
+      supabaseModal.addEventListener('click', (e) => { if (e.target === supabaseModal) supabaseModal.style.display = 'none'; });
+
+      btnSaveSupabase.addEventListener('click', () => {
+        const url = inputSupabaseUrl.value.trim();
+        const key = inputSupabaseKey.value.trim();
+        if (window.DocSeeDB) {
+          const res = window.DocSeeDB.updateConfig(url, key);
+          supabaseStatusText.textContent = res.message;
+          supabaseStatusText.style.display = 'block';
+          showToast(res.message);
+          setTimeout(() => { supabaseModal.style.display = 'none'; }, 1500);
+        }
+      });
+    }
+
     // ═══════════════════════════════════════════════════════════════
-    // INITIAL BOOT
+    // INITIAL BOOT & SUPABASE QUEUE SYNC
     // ═══════════════════════════════════════════════════════════════
-    renderPatientList();
-    renderPatientDetail();
+    async function loadDynamicPatients() {
+      if (window.DocSeeDB) {
+        const liveQueue = await window.DocSeeDB.getQueue();
+        if (liveQueue && liveQueue.length > 0) {
+          liveQueue.forEach(item => {
+            if (!patients.some(p => p.token === item.token_number || p.name === item.patient_name)) {
+              patients.unshift({
+                id: 'pat-' + item.token_number.toLowerCase().replace('-', ''),
+                name: item.patient_name || 'Patient',
+                token: item.token_number || 'A-1099',
+                age: item.age || 35,
+                sex: item.gender === 'Female' ? 'F' : 'M',
+                phone: '+91 98XXX-XXXXX',
+                language: 'Hindi / English',
+                department: item.department || 'General Medicine',
+                status: item.priority_level === 'Emergency' ? 'priority' : (item.priority_level === 'Priority' ? 'priority' : 'waiting'),
+                wait_time: (item.estimated_wait_min || 12) + 'm wait',
+                arrived: 'Just now',
+                mode: item.department && item.department.includes('Ayurveda') ? 'ayush' : 'allopathic',
+                complaint: item.chief_complaint || 'Clinical Intake',
+                vitals: {
+                  bp: `${item.vitals?.bpSys || 120}/${item.vitals?.bpDia || 80} mmHg`,
+                  hr: `${item.vitals?.hr || 74} bpm`,
+                  temp: `${item.vitals?.temp || 98.6}°F`,
+                  spo2: `${item.vitals?.spo2 || 98}%`,
+                  wt: `${item.vitals?.weight || 65} kg`,
+                  sugar: `${item.vitals?.rbs || 105} mg/dL`
+                },
+                summary: `Patient ${item.patient_name} presented via DocSee Kiosk with ${item.chief_complaint}. Vitals and case history structured for clinical review.`,
+                timeline: [
+                  { time: "Just now", title: "DocSee Patient Intake Submitted", desc: "Patient completed voice/touch intake & verified summary.", tag: "kiosk" }
+                ],
+                documents: [],
+                transcript: [
+                  { speaker: "Kiosk", orig: "Please describe your main symptoms.", trans: "Please describe your main symptoms.", isKiosk: true },
+                  { speaker: item.patient_name, orig: item.symptoms_narrative || item.chief_complaint, trans: item.symptoms_narrative || item.chief_complaint, isKiosk: false }
+                ],
+                openingQuestion: `How long have you been feeling ${item.chief_complaint.toLowerCase()}?`
+              });
+            }
+          });
+        }
+      }
+      renderPatientList();
+      renderPatientDetail();
+    }
+
+    loadDynamicPatients();
   </script>
 
+  <!-- SUPABASE SETTINGS MODAL -->
+  <div id="supabase-modal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #fff; border-radius: 16px; max-width: 520px; width: 100%; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 1px solid var(--line);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; background: #f0fdfa; border-radius: 10px; display: grid; place-items: center; color: var(--teal);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div>
+            <h3 style="font: 700 18px var(--font-heading); color: var(--ink); margin: 0;">Supabase Database Connection</h3>
+            <p style="font-size: 11px; color: var(--muted); margin: 2px 0 0;">Connect your PostgreSQL Cloud Database for real-time OPD sync</p>
+          </div>
+        </div>
+        <button id="close-supabase-modal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted);">&times;</button>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 20px; font-size: 12px; color: var(--ink); line-height: 1.5;">
+        <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--teal-dark); margin-bottom: 4px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+          <span>Status: Hybrid Cloud + Local Sync Active</span>
+        </div>
+        <span>All patient intakes from <code>intake.html</code> and case sheets are automatically synced in real-time. You can use your own Supabase credentials below.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+        <div>
+          <label style="font-size: 11px; font-weight: 700; color: var(--ink); display: block; margin-bottom: 6px;">Supabase Project URL</label>
+          <input type="text" id="supabase-url-input" placeholder="https://your-project.supabase.co" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 12px; font-family: var(--font-mono); outline: none;">
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 700; color: var(--ink); display: block; margin-bottom: 6px;">Supabase Anon Public API Key</label>
+          <input type="password" id="supabase-key-input" placeholder="eyJhbGciOiJIUzI1NiIsIn..." style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 12px; font-family: var(--font-mono); outline: none;">
+        </div>
+      </div>
+
+      <div id="supabase-status-text" style="display: none; padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #15803d; font-size: 11px; font-weight: 600; margin-bottom: 16px;"></div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button onclick="document.getElementById('supabase-modal').style.display='none'" style="padding: 9px 16px; background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
+        <button id="btn-save-supabase" style="padding: 9px 20px; background: var(--teal); color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(13,148,136,0.25);">Save & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
 </body>
 </html>

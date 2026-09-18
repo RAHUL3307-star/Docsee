@@ -164,9 +164,13 @@
       <div class="step-item" data-sid="5"><div class="step-num" id="sn-5">6</div><div><div class="step-label">Review &amp; Submit</div><div class="step-sub">Confirm case sheet</div></div></div>
     </div>
     <div class="intake-sidebar-footer">
-      <div class="kiosk-badge">
+      <div class="kiosk-badge" style="margin-bottom: 8px;">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
         <div class="kiosk-badge-text"><b>ABDM Secure Kiosk</b><span>Terminal 02 · AIIMS OPD Floor 2</span></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; font-size:10px; color:var(--teal); font-weight:700; padding:4px 8px; background:var(--teal-light); border-radius:6px; border:1px solid #ccede9;">
+        <span style="width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981;"></span>
+        <span>Supabase PostgreSQL Sync Active</span>
       </div>
     </div>
   </aside>
@@ -610,12 +614,48 @@
     `;
     nextStep();
   }
-  function submitCase() {
-    const tokenNum = Math.floor(1040 + Math.random() * 20);
-    document.getElementById('token-display').textContent = 'A-' + tokenNum;
+  async function submitCase() {
+    const tokenNum = 'A-' + Math.floor(1040 + Math.random() * 20);
+    document.getElementById('token-display').textContent = tokenNum;
     const dept = document.getElementById('reg-dept').value || 'General Medicine';
     document.getElementById('token-dept-display').textContent = dept + ' · Floor 2 · OPD Room ' + Math.ceil(Math.random()*5);
-    showToast('Case submitted securely to Dr. Priya Sharma');
+
+    // Collect full structured case intake payload
+    const caseData = {
+      tokenNumber: tokenNum,
+      name: document.getElementById('reg-name').value.trim() || 'Anonymous Patient',
+      age: document.getElementById('reg-age').value || 30,
+      gender: document.getElementById('reg-gender').value || 'Other',
+      phone: document.getElementById('reg-phone').value.trim() || '',
+      abha: document.getElementById('reg-abha').value.trim() || '',
+      department: dept,
+      address: document.getElementById('reg-address').value.trim() || '',
+      language: selectedLang || 'en',
+      complaint: selectedComplaint ? selectedComplaint.charAt(0).toUpperCase() + selectedComplaint.slice(1) : 'General Medical Concern',
+      symptomsDescription: document.getElementById('complaint-text').value.trim() || '',
+      translationText: document.getElementById('translation-text') ? document.getElementById('translation-text').textContent : '',
+      qaAnswers: answers,
+      conditions: [...document.querySelectorAll('#conditions-list .check-item.checked')].map(el => el.querySelector('.check-text').textContent),
+      medications: document.getElementById('hist-meds').value.trim() || 'None reported',
+      allergies: document.getElementById('hist-allergy').value.trim() || 'NKDA (No Known Drug Allergies)',
+      surgeries: document.getElementById('hist-surgery').value.trim() || 'None',
+      familyHistory: [...document.querySelectorAll('#family-list .check-item.checked')].map(el => el.querySelector('.check-text').textContent),
+      vitals: {
+        bpSys: document.getElementById('v-bp-sys').value || 120,
+        bpDia: document.getElementById('v-bp-dia').value || 80,
+        hr: document.getElementById('v-hr').value || 72,
+        temp: document.getElementById('v-temp').value || '98.6',
+        spo2: document.getElementById('v-spo2').value || 98,
+        weight: document.getElementById('v-weight').value || 65,
+        rbs: document.getElementById('v-rbs').value || 105
+      }
+    };
+
+    if (window.DocSeeDB) {
+      await window.DocSeeDB.savePatientIntake(caseData);
+    }
+
+    showToast('Case Sheet saved & synced to Supabase / Dr. Priya Sharma');
     goToStep(6);
   }
   function resetIntake() {
@@ -645,5 +685,7 @@
   const langBtn = document.getElementById('btn-lang-next');
   langBtn.style.opacity = '0.5'; langBtn.style.cursor = 'not-allowed';
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 </body>
 </html>
