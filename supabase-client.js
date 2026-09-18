@@ -8,7 +8,7 @@
 // Default Supabase Config for Project: ydnbeojecurymwtqlntr
 const DEFAULT_SUPABASE_CONFIG = {
   url: localStorage.getItem('DOCSEE_SUPABASE_URL') || 'https://ydnbeojecurymwtqlntr.supabase.co',
-  anonKey: localStorage.getItem('DOCSEE_SUPABASE_KEY') || '',
+  anonKey: localStorage.getItem('DOCSEE_SUPABASE_KEY') || 'sb_publishable_zDRl7MmUt5wbDTJLrVaidg_FdwJHARc',
   isConnected: false
 };
 
@@ -24,7 +24,7 @@ class DocSeeDatabase {
   init() {
     if (window.supabase && typeof window.supabase.createClient === 'function') {
       try {
-        if (this.config.url && this.config.url.startsWith('https://') && this.config.anonKey.length > 20) {
+        if (this.config.url && this.config.url.startsWith('https://') && this.config.anonKey && this.config.anonKey.length > 10) {
           this.client = window.supabase.createClient(this.config.url, this.config.anonKey);
           this.config.isConnected = true;
           console.log('✅ [DocSee] Connected to Supabase Cloud Database:', this.config.url);
