@@ -189,7 +189,17 @@ class DocSeeDatabase {
       try {
         const { data: pData, error: pErr } = await this.client
           .from('docsee_patients')
-          .insert([patientRecord])
+          .insert([{
+            token_number: token,
+            full_name: patientRecord.full_name,
+            age: patientRecord.age,
+            gender: patientRecord.gender,
+            phone: patientRecord.phone,
+            abha_id: patientRecord.abha_id,
+            department: patientRecord.department,
+            language: patientRecord.language,
+            address: patientRecord.address
+          }])
           .select();
         
         if (!pErr && pData && pData[0]) {
@@ -203,13 +213,18 @@ class DocSeeDatabase {
             existing_conditions: caseRecord.existing_conditions,
             current_medications: caseRecord.current_medications,
             known_allergies: caseRecord.known_allergies,
+            past_surgeries: caseRecord.past_surgeries,
+            family_history: caseRecord.family_history,
             bp_systolic: parseInt(caseData.vitals?.bpSys) || 120,
             bp_diastolic: parseInt(caseData.vitals?.bpDia) || 80,
             heart_rate: parseInt(caseData.vitals?.hr) || 72,
             temperature_f: parseFloat(caseData.vitals?.temp) || 98.6,
             spo2_percent: parseInt(caseData.vitals?.spo2) || 98,
+            weight_kg: parseFloat(caseData.vitals?.weight) || 65.0,
+            rbs_mgdl: parseInt(caseData.vitals?.rbs) || 105,
             priority_level: priority,
-            clinical_summary: caseRecord.clinical_summary
+            clinical_summary: caseRecord.clinical_summary,
+            status: 'waiting'
           }]);
 
           await this.client.from('docsee_queue').insert([{
