@@ -1,4 +1,4 @@
-// MediKiosk Interactive Controller
+// DocSee Interactive Controller
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Toast Notification System
   const toastContainer = document.getElementById('toast-container');
@@ -79,13 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
         displayPatient.style.display = 'grid';
         displayPatient.style.opacity = '0';
         setTimeout(() => { displayPatient.style.opacity = '1'; }, 20);
-        if (windowbarTitle) windowbarTitle.textContent = 'MEDIKIOSK / PATIENT KIOSK (TOUCH & VOICE)';
+        if (windowbarTitle) windowbarTitle.textContent = 'DocSee / PATIENT KIOSK (TOUCH & VOICE)';
       } else {
         displayPatient.style.display = 'none';
         displayClinician.style.display = 'grid';
         displayClinician.style.opacity = '0';
         setTimeout(() => { displayClinician.style.opacity = '1'; }, 20);
-        if (windowbarTitle) windowbarTitle.textContent = 'MEDIKIOSK / CLINICIAN DESK';
+        if (windowbarTitle) windowbarTitle.textContent = 'DocSee / CLINICIAN DESK';
       }
     }
   }
