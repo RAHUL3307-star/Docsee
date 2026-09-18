@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediKiosk — AYUSH & Allopathic Clinical Intake Engine Dashboard</title>
+  <meta name="description" content="MediKiosk OPD Intelligence — Multilingual AI Clinical Intake, Triage & FHIR Integration for Physicians.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" data-testid="main-navigation" role="navigation">
+      <a href="index.html" class="brand" title="MediKiosk OPD Intelligence">
+        <div class="brand-mark">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
+        </div>
+        <div>
+          <strong>MediKiosk</strong>
+          <span>OPD Intelligence</span>
+        </div>
+      </a>
+
+      <!-- RETURN TO LANDING QUEUE BUTTON -->
+      <a href="index.html" class="back-to-landing" title="Back to MediKiosk Landing Page">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        <span>Return to Landing Page</span>
+      </a>
+
+      <!-- FACILITY SWITCHER -->
+      <div class="facility" id="facility-card" title="Switch OPD department">
+        <div class="facility-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+        </div>
+        <div>
+          <b>AIIMS New Delhi</b>
+          <span>Medicine OPD · Floor 2</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+
+      <!-- WORKSPACE NAV -->
+      <p class="nav-label">Workspace</p>
+      <a href="dashboard.html" class="nav-item active" id="nav-dashboard" style="text-decoration: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>Dashboard</span>
+        <span class="nav-count">1</span>
+      </a>
+      <button class="nav-item" id="nav-queue">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Patient queue</span>
+      </button>
+      <a href="intake.html" class="nav-item" id="nav-intake" style="text-decoration: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        <span>Patient intake</span>
+      </a>
+      <a href="casesheet.html" class="nav-item" id="nav-casesheet" style="text-decoration: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        <span>Digital case sheet</span>
+      </a>
+
+      <!-- SYSTEM NAV -->
+      <p class="nav-label nav-spacer">System</p>
+      <a href="analytics.html" class="nav-item" id="nav-analytics" style="text-decoration: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span>OPD analytics</span>
+      </a>
+      <a href="privacy.html" class="nav-item" id="nav-privacy" style="text-decoration: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>Privacy & consent</span>
+      </a>
+
+      <!-- SIDEBAR FOOTER -->
+      <div class="sidebar-bottom">
+        <div class="secure-note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+          <div>
+            <b>ABDM secure workspace</b><br>
+            <span>Last sync 2 min ago</span>
+          </div>
+        </div>
+
+        <div class="profile">
+          <div class="profile-avatar">PS</div>
+          <div>
+            <b>Dr. Priya Sharma</b>
+            <span>Physician · OPD 2</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="main-content" role="main">
+
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Tuesday, 18 June 2024 · Morning OPD</p>
+          <h1 class="heading-line">
+            Good morning, Dr. Sharma <span class="sparkle">✦</span>
+          </h1>
+        </div>
+        <div class="top-actions">
+          <div class="live-pill">
+            <span class="live-dot"></span>
+            <span>Live queue 18</span>
+          </div>
+          <button class="icon-button" id="btn-notifications" aria-label="Notifications" title="Priority alerts">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          </button>
+          <div class="doctor-avatar" title="Dr. Priya Sharma">PS</div>
+        </div>
+      </header>
+
+      <!-- CLINICAL INTAKE MODE SELECTOR BANNER -->
+      <section class="mode-banner" aria-label="Clinical intake mode selection">
+        <div class="mode-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>
+        </div>
+        <div class="mode-copy">
+          <strong>Clinical intake mode</strong>
+          <span>Choose the context for your next patient summary</span>
+        </div>
+        <div class="mode-switch">
+          <button class="mode-btn selected" id="btn-mode-allopathic" data-mode="allopathic">
+            <span class="mode-btn-dot"></span> Allopathic
+          </button>
+          <button class="mode-btn ayush" id="btn-mode-ayush" data-mode="ayush">
+            <span class="mode-btn-dot"></span> AYUSH
+          </button>
+        </div>
+        <div class="mode-status" id="mode-status-text">Vital signs · SOCRATES · ROS</div>
+      </section>
+
+      <!-- 4 BENTO METRIC CARDS -->
+      <section class="metrics-grid" aria-label="OPD live KPIs">
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon teal">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <span class="metric-arrow">↗</span>
+          </div>
+          <div class="metric-label">Waiting now</div>
+          <div class="metric-value" id="metric-waiting">18</div>
+          <div class="metric-sub">+3 since 9 AM</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon blue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>
+            </div>
+            <span class="metric-arrow">↗</span>
+          </div>
+          <div class="metric-label">Ready to consult</div>
+          <div class="metric-value" id="metric-ready">7</div>
+          <div class="metric-sub">2 need review</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon red">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <span class="metric-arrow">↗</span>
+          </div>
+          <div class="metric-label">Priority alerts</div>
+          <div class="metric-value red" id="metric-alerts" style="color: var(--red);">2</div>
+          <div class="metric-sub red">Requires attention</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon green">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <span class="metric-arrow">↗</span>
+          </div>
+          <div class="metric-label">Avg. intake time</div>
+          <div class="metric-value">3m 42s</div>
+          <div class="metric-sub green">↓ 28% this week</div>
+        </div>
+      </section>
+
+      <!-- TWO-COLUMN DASHBOARD GRID -->
+      <div class="dashboard-grid">
+
+        <!-- LEFT COLUMN: PATIENT QUEUE PANEL -->
+        <section class="patient-list-panel" aria-label="Today's OPD Patient Queue">
+          <div class="queue-panel-head">
+            <div class="panel-title-row">
+              <h2 class="panel-title">Patient queue</h2>
+              <span class="live-tag">● Live</span>
+            </div>
+            <button class="filter-btn" id="btn-filter-trigger" title="Filter Queue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filter
+            </button>
+          </div>
+          <div class="panel-sub">AI intake status across today's OPD</div>
+
+          <!-- SEARCH INPUT -->
+          <div class="search-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="queue-search" class="search-input" placeholder="Search name, token or complaint..." aria-label="Search patients in queue">
+          </div>
+
+          <!-- FILTER TABS -->
+          <div class="filter-tabs" role="tablist">
+            <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true">All 18</button>
+            <button class="filter-btn priority" data-filter="priority" role="tab" aria-selected="false">Priority 2</button>
+            <button class="filter-btn" data-filter="ready" role="tab" aria-selected="false">Ready 7</button>
+          </div>
+
+          <!-- PATIENT LIST ITEMS -->
+          <div class="patient-list" id="patient-list-container" role="list">
+            <!-- Dynamically injected via JavaScript -->
+          </div>
+
+          <button class="queue-footer-btn" id="btn-view-full-queue">
+            <span>View full queue</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+          </button>
+        </section>
+
+        <!-- RIGHT COLUMN: PATIENT CLINICAL DETAIL PANEL -->
+        <section class="detail-panel" aria-label="Patient Clinical Detail Panel" id="detail-panel">
+
+          <!-- DETAIL HEADER -->
+          <div class="detail-header">
+            <div class="patient-identity">
+              <div class="large-avatar avatar-high" id="detail-avatar">MK</div>
+              <div>
+                <div class="identity-name-row">
+                  <h3 class="identity-name" id="detail-name">Meena Kumari</h3>
+                  <span class="abha-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                    ABHA verified
+                  </span>
+                </div>
+                <div class="identity-sub" id="detail-demographics">58 years · Female · A-1042 · General Medicine</div>
+                <div class="identity-tags">
+                  <span class="pill-tag" id="detail-lang">Hindi</span>
+                  <span class="pill-tag allopathic" id="detail-mode-tag">Allopathic intake</span>
+                </div>
+              </div>
+            </div>
+            <button class="icon-button" id="btn-detail-more" aria-label="More patient actions">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+          </div>
+
+          <!-- PRIORITY TRIAGE ALERT BANNER -->
+          <div class="alert-card" id="triage-alert-banner">
+            <div class="alert-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="alert-content">
+              <div class="alert-title">Priority triage alert</div>
+              <div class="alert-text" id="alert-text-content">Chest discomfort with breathlessness detected during intake. Review before calling next patient.</div>
+              <div class="alert-meta">AI confidence 94% · Flagged 2 min ago</div>
+            </div>
+            <button class="ack-btn" id="btn-acknowledge-alert">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Acknowledge</span>
+            </button>
+          </div>
+
+          <!-- TABS ROW -->
+          <div class="detail-tabs" role="tablist">
+            <button class="tab-btn active" id="tab-summary" data-tab="summary" role="tab" aria-selected="true">
+              Clinical summary
+            </button>
+            <button class="tab-btn" id="tab-docs" data-tab="docs" role="tab" aria-selected="false">
+              Documents <span class="tab-badge" id="docs-count-badge">3</span>
+            </button>
+            <button class="tab-btn" id="tab-transcript" data-tab="transcript" role="tab" aria-selected="false">
+              Transcript
+            </button>
+          </div>
+
+          <!-- TAB CONTENT 1: CLINICAL SUMMARY -->
+          <div id="tab-pane-summary" class="tab-pane">
+            <div class="summary-status-bar">
+              <div class="ai-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                <span>AI-generated draft</span>
+                <span class="ai-updated">Updated 2 min ago · Review before signing</span>
+              </div>
+              <button class="edit-btn" id="btn-edit-summary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                <span id="edit-btn-text">Edit summary</span>
+              </button>
+            </div>
+
+            <!-- STRUCTURED SUMMARY SECTIONS -->
+            <div class="summary-sections" id="summary-sections-container">
+              <!-- Dynamically populated based on Allopathic / AYUSH mode -->
+            </div>
+
+            <!-- ATTACHED DOCUMENTS SUMMARY STRIP -->
+            <div class="docs-strip">
+              <div class="docs-strip-left">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+                <span>Documents scanned</span>
+                <span id="docs-strip-count">3 documents · 2 findings</span>
+              </div>
+              <button class="add-doc-btn" id="btn-add-doc-trigger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Add document
+              </button>
+            </div>
+
+            <!-- DETAIL FOOTER ACTIONS -->
+            <div class="detail-footer">
+              <div class="compliance-text">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                <span>Consent captured · DPDP compliant workspace. All drafts require physician sign-off.</span>
+              </div>
+              <div class="footer-actions">
+                <a href="casesheet.html" class="fhir-link" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; background: var(--teal-light); color: var(--teal-dark); border-color: #ccede9;" title="Generate and Print ABHA Digital Case Sheet">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                  <span>Digital case sheet</span>
+                </a>
+                <button class="fhir-link" id="btn-fhir-preview">View FHIR preview</button>
+                <button class="save-btn" id="btn-save-continue">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span id="save-btn-label">Save & continue</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB CONTENT 2: DOCUMENTS -->
+          <div id="tab-pane-docs" class="tab-pane" style="display: none;">
+            <div class="documents-grid" id="documents-grid-container">
+              <!-- Dynamically rendered document cards -->
+            </div>
+            <div class="detail-footer">
+              <div class="compliance-text">
+                <span>OCR extraction verified against physical scanned papers.</span>
+              </div>
+              <button class="save-btn" id="btn-upload-doc-tab">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Scan / Upload New Document
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB CONTENT 3: TRANSCRIPT -->
+          <div id="tab-pane-transcript" class="tab-pane" style="display: none;">
+            <div class="transcript-container" id="transcript-container">
+              <!-- Dynamic transcript bubbles -->
+            </div>
+            <div class="detail-footer">
+              <div class="compliance-text">
+                <span class="live-dot" style="display:inline-block; margin-right:4px;"></span>
+                <span>Audio stream recorded at MediKiosk Terminal 02 · 98.4% dialect comprehension score</span>
+              </div>
+              <button class="edit-btn" id="btn-export-transcript">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Audio Transcript
+              </button>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- FHIR PREVIEW MODAL -->
+  <div id="fhir-modal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="fhir-modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <div class="nav-label" style="color: var(--teal);">ABDM / HL7 FHIR R4</div>
+          <h3 id="fhir-modal-title" class="modal-title">FHIR Composition & Condition Resource</h3>
+        </div>
+        <button class="modal-close-btn" id="close-fhir-modal" aria-label="Close modal">&times;</button>
+      </div>
+      <p style="font-size: 11px; color: var(--muted); margin-bottom: 12px;">
+        Standardized bundle for National Digital Health Mission (ABDM) exchange with EHR systems.
+      </p>
+      <pre class="fhir-pre" id="fhir-json-code"></pre>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+        <button class="edit-btn" id="btn-copy-fhir">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          Copy JSON Bundle
+        </button>
+        <button class="save-btn" id="btn-done-fhir">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD DOCUMENT MODAL -->
+  <div id="add-doc-modal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Scan / Upload Physical Record</h3>
+        <button class="modal-close-btn" id="close-add-doc-modal">&times;</button>
+      </div>
+      <div style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 18px; background: #f8fafc;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color: var(--teal); margin-bottom: 10px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p style="font-weight: 600; font-size: 13px; color: var(--ink); margin-bottom: 4px;">Drag & drop lab report or prescription scan</p>
+        <p style="font-size: 11px; color: var(--muted); margin-bottom: 14px;">Supported formats: JPEG, PNG, PDF (Up to 25MB)</p>
+        <button class="save-btn" style="margin: 0 auto;" id="btn-choose-file">Choose Local File</button>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="edit-btn" id="cancel-add-doc">Cancel</button>
+        <button class="save-btn" id="simulate-scan-doc">Simulate AI OCR Scan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL QUEUE DRAWER / MODAL -->
+  <div id="full-queue-modal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width: 720px;">
+      <div class="modal-header">
+        <div>
+          <div class="nav-label" style="color: var(--teal);">Live OPD Queue</div>
+          <h3 class="modal-title">All Patients in Morning Roster (Floor 2)</h3>
+        </div>
+        <button class="modal-close-btn" id="close-full-queue">&times;</button>
+      </div>
+      <div id="full-queue-roster" style="display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto;">
+        <!-- Injected list -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-el" class="toast" style="display: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #34d399;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+    <span id="toast-text">Action completed successfully</span>
+  </div>
+
+  <!-- DASHBOARD JAVASCRIPT LOGIC -->
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // PATIENTS DATASET
+    // ═══════════════════════════════════════════════════════════════
+    const patients = [
+      {
+        id: "p-1042",
+        token: "A-1042",
+        name: "Meena Kumari",
+        age: 58,
+        sex: "F",
+        department: "General Medicine",
+        language: "Hindi",
+        status: "priority",
+        wait_time: "Now",
+        complaint: "Chest discomfort + breathlessness",
+        risk: "high",
+        abha: "Verified",
+        mode: "allopathic",
+        arrived: "09:14",
+        alert: "Chest discomfort with breathlessness detected during intake. Review before calling next patient.",
+        alertMeta: "AI confidence 94% · Flagged 2 min ago",
+        allopathicSummary: [
+          ["Chief complaint", "Chest discomfort with breathlessness for 2 hours, started while walking to the hospital."],
+          ["History of present illness", "Central, pressure-like discomfort radiating to the left shoulder. Worse on exertion, partially relieved with rest. Associated sweating and nausea. No syncope."],
+          ["Past history", "Type 2 diabetes mellitus (8 years), hypertension (5 years). No prior cardiac event documented."],
+          ["Medications & allergies", "Metformin 500 mg twice daily · Amlodipine 5 mg once daily. No known drug allergies."],
+          ["Review of systems", "Denies fever, cough, palpitations, ankle swelling."]
+        ],
+        ayushSummary: [
+          ["Pradhana Vedana (Chief complaint)", "Urah Shoola (chest heaviness) and Shwasa Kashta (breathlessness) on mild exertion for 2 hours."],
+          ["Prakriti & Dosha Lakshana", "Vata-Kapha dominant Prakriti with Rasa-Rakta Vaha Srotorodha (vascular resistance). Prana Vata vilomata."],
+          ["Agni & Koshtha Pariksha", "Mandaagni with Ajeerna history. Madhyama koshtha. Jihva (tongue) has mild Sama coating."],
+          ["Ahara & Vihara Hetu", "Sedentary lifestyle, high Snigdha (oily) and Lavana (salty) diet, psychological stress (Chinta)."],
+          ["Rogi Pariksha & Nadi", "Nadi: Vega-yukta (rapid), Vata-Kapha sparsha. Bala: Madhyama. No known contraindications."]
+        ],
+        documents: [
+          {
+            title: "CBC & Lipid Panel",
+            type: "Lab Report",
+            date: "Today, 08:30 AM",
+            desc: "AIIMS Central Automated Lab #892",
+            flags: [{ text: "HGB 10.2 g/dL ↓", type: "critical" }, { text: "Total Chol 218 mg/dL ↑", type: "critical" }, { text: "WBC 6,800 Normal", type: "ok" }]
+          },
+          {
+            title: "Previous OPD Prescription",
+            type: "Prescription",
+            date: "6 months ago",
+            desc: "Dr. P. Singh (Reg MCI//8892)",
+            flags: [{ text: "Metformin 500mg BD", type: "ok" }, { text: "Amlodipine 5mg OD", type: "ok" }]
+          },
+          {
+            title: "12-Lead Rhythm Strip",
+            type: "Diagnostics",
+            date: "Today, 09:16 AM",
+            desc: "MediKiosk Intake Terminal Lead-II Sensor",
+            flags: [{ text: "HR 84 bpm", type: "ok" }, { text: "Sinus Rhythm", type: "ok" }]
+          }
+        ],
+        transcript: [
+          { speaker: "Kiosk AI", orig: "नमस्ते मीना जी, आज आपको क्या परेशानी महसूस हो रही है?", trans: "Namaste Meena ji, what discomfort are you experiencing today?", isKiosk: true },
+          { speaker: "Meena Kumari", orig: "मुझे छाती के बीच में बहुत भारीपन लग रहा है और सांस फूल रही है। जब मैं अस्पताल की तरफ आ रही थी तब यह शुरू हुआ।", trans: "I feel severe heaviness in the center of my chest and breathlessness. It started when I was walking towards the hospital.", isKiosk: false },
+          { speaker: "Kiosk AI", orig: "क्या यह दर्द आपके बाएं हाथ या कंधे की तरफ भी जा रहा है? क्या पसीना आ रहा है?", trans: "Does this pain radiate to your left arm or shoulder? Are you sweating?", isKiosk: true },
+          { speaker: "Meena Kumari", orig: "हां बेटा, बाएं कंधे में जा रहा है और हल्का पसीना भी आ रहा है। थोड़ा जी भी मिचला रहा है।", trans: "Yes, it is radiating to my left shoulder and mild sweating is present. Mild nausea too.", isKiosk: false },
+          { speaker: "Kiosk AI", orig: "समझा गया। आपकी यह जानकारी डॉक्टर प्रिया शर्मा को प्राथमिकता (Priority review) के साथ भेज दी गई है। कृपया ओपीडी कक्ष संख्या 2 के बाहर प्रतीक्षा करें।", trans: "Understood. This information has been dispatched with priority review to Dr. Priya Sharma. Please wait outside OPD Room 2.", isKiosk: true }
+        ]
+      },
+      {
+        id: "p-1043",
+        token: "A-1043",
+        name: "Ravi Shankar",
+        age: 42,
+        sex: "M",
+        department: "Ayurveda OPD",
+        language: "Hindi",
+        status: "ready",
+        wait_time: "4 min",
+        complaint: "Indigestion, irregular sleep",
+        risk: "medium",
+        abha: "Verified",
+        mode: "ayush",
+        arrived: "09:21",
+        alert: null,
+        allopathicSummary: [
+          ["Chief complaint", "Chronic dyspepsia, acid regurgitation, and fragmented sleep for 4 weeks."],
+          ["History of present illness", "Postprandial bloating and epigastric burning. Wakes multiple times during night. No hematemesis or melena."],
+          ["Past history", "Non-ulcer dyspepsia diagnosed 2 years ago."],
+          ["Medications & allergies", "Pantoprazole 40 mg OD taken on-and-off. NKDA."],
+          ["Review of systems", "Normal bowel habits. Mild daytime sleepiness."]
+        ],
+        ayushSummary: [
+          ["Pradhana Vedana (Chief complaint)", "Agni mandya (reduced digestive fire), Ajeerna (indigestion), and Anidra (disturbed sleep) for 4 weeks."],
+          ["Prakriti & Dosha Lakshana", "Vata-Pitta dominant Prakriti with Samana Vata dusti and Pachaka Pitta kshaya. Heaviness post-meals, acid reflux, morning sluggishness."],
+          ["Agni & Koshtha Pariksha", "Mandaagni (hypoactive digestion), Krura koshtha (tendency to irregular bowel movements). Tongue shows mild Sama (coating)."],
+          ["Ahara & Vihara Hetu (Lifestyle)", "Irregular meal timings, late night dinner (Ratri jagarana), excessive intake of oily & spicy street food (Vidahi ahara)."],
+          ["Rogi Pariksha & Nadi", "Nadi: Mandagati, Vata-Pitta sparsha. Bala: Madhyama. No known allergies to Ayurvedic formulations."]
+        ],
+        documents: [
+          {
+            title: "Digestive & Diet Log",
+            type: "Self-Report",
+            date: "Yesterday",
+            desc: "Logged via MediKiosk Mobile QR",
+            flags: [{ text: "Late Dinners (11 PM)", type: "critical" }, { text: "Spicy Food 4x/wk", type: "critical" }]
+          },
+          {
+            title: "Ayurvedic OPD Slip",
+            type: "Previous Visit",
+            date: "3 months ago",
+            desc: "AIIMS CCRAS Unit",
+            flags: [{ text: "Avipattikar Churna Rx", type: "ok" }]
+          }
+        ],
+        transcript: [
+          { speaker: "Kiosk AI", orig: "नमस्ते रवि जी, आपको पेट और नींद के बारे में क्या शिकायत है?", trans: "Namaste Ravi ji, what concerns do you have regarding digestion and sleep?", isKiosk: true },
+          { speaker: "Ravi Shankar", orig: "खाना खाने के बाद पेट बहुत भारी लगता है, खट्टी डकारें आती हैं और रात को 2-3 बजे नींद टूट जाती है।", trans: "After eating, stomach feels very heavy, sour belching occurs, and sleep breaks around 2-3 AM.", isKiosk: false },
+          { speaker: "Kiosk AI", orig: "क्या आप देर रात भोजन करते हैं? क्या तनाव अधिक रहता है?", trans: "Do you eat late dinners? Is stress elevated?", isKiosk: true },
+          { speaker: "Ravi Shankar", orig: "हां, ऑफिस की वजह से 11 बजे खाना होता है और स्क्रीन टाइम बहुत ज्यादा है।", trans: "Yes, due to office work dinner is at 11 PM and screen time is very high.", isKiosk: false }
+        ]
+      },
+      {
+        id: "p-1044",
+        token: "A-1044",
+        name: "Ayesha Khan",
+        age: 29,
+        sex: "F",
+        department: "General Medicine",
+        language: "English",
+        status: "intake",
+        wait_time: "8 min",
+        complaint: "Fatigue for 3 weeks",
+        risk: "low",
+        abha: "Verified",
+        mode: "allopathic",
+        arrived: "09:28",
+        alert: null,
+        allopathicSummary: [
+          ["Chief complaint", "Persistent fatigue, generalized weakness, and morning sluggishness for 3 weeks."],
+          ["History of present illness", "Gradual onset fatigue affecting daily desk work. Mild bilateral frontal headache in evenings. Denies shortness of breath or chest pain."],
+          ["Past history", "Mild iron deficiency anemia 2 years ago during pregnancy."],
+          ["Medications & allergies", "Over-the-counter multivitamin intermittently. NKDA."],
+          ["Review of systems", "Sleep 7 hours but unrefreshing. Normal appetite, stable weight."]
+        ],
+        ayushSummary: [
+          ["Pradhana Vedana (Chief complaint)", "Daurbalya (generalized fatigue) and Shiro-gaurava (head heaviness) for 3 weeks."],
+          ["Prakriti & Dosha Lakshana", "Vata-dominant Prakriti with Rasa Dhatu Kshaya."],
+          ["Agni & Koshtha", "Vishamagni (variable digestive strength). Madhyama koshtha."],
+          ["Ahara & Vihara", "Skipping breakfast, sedentary computer work 9 hours daily."],
+          ["Rogi Pariksha", "Nadi: Mandagati, Vata-dominant. Bala: Avara."]
+        ],
+        documents: [
+          {
+            title: "CBC & Iron Study",
+            type: "Lab Report",
+            date: "1 week ago",
+            desc: "Thyrocare Digitized",
+            flags: [{ text: "HGB 10.4 g/dL ↓", type: "critical" }, { text: "Ferritin 14 ng/mL ↓", type: "critical" }]
+          }
+        ],
+        transcript: [
+          { speaker: "Kiosk AI", orig: "Hello Ayesha, how can we assist you today?", trans: "Hello Ayesha, how can we assist you today?", isKiosk: true },
+          { speaker: "Ayesha Khan", orig: "I've been feeling exhausted all the time for the last 3 weeks, waking up tired and getting evening headaches.", trans: "I've been feeling exhausted all the time for the last 3 weeks, waking up tired and getting evening headaches.", isKiosk: false }
+        ]
+      },
+      {
+        id: "p-1045",
+        token: "A-1045",
+        name: "Suresh Patil",
+        age: 67,
+        sex: "M",
+        department: "Ayurveda OPD",
+        language: "Marathi",
+        status: "ready",
+        wait_time: "11 min",
+        complaint: "Knee pain, stiffness",
+        risk: "low",
+        abha: "Verified",
+        mode: "ayush",
+        arrived: "09:33",
+        alert: null,
+        allopathicSummary: [
+          ["Chief complaint", "Bilateral knee joint pain and morning stiffness for 6 months, worse on right side."],
+          ["History of present illness", "Pain aggravated by climbing stairs and squatting. Mild crepitus felt on flexion. Morning stiffness lasts 20 minutes."],
+          ["Past history", "Primary Osteoarthritis diagnosed 1 year ago."],
+          ["Medications & allergies", "Paracetamol 650 mg SOS. NKDA."],
+          ["Review of systems", "No fever, no systemic inflammation, no redness around joints."]
+        ],
+        ayushSummary: [
+          ["Pradhana Vedana (Chief complaint)", "Janu Sandhigata Vata (Bilateral knee joint pain & crepitus) aggravated in early mornings and cold weather."],
+          ["Prakriti & Dosha Lakshana", "Vata-Kapha Prakriti, Janu sandhi shoola (knee pain), sparsha asahatva (tenderness)."],
+          ["Agni & Dhatu", "Sama Agni, Asthi-Majja dhatu kshaya."],
+          ["Ahara & Vihara", "Walking 3 km daily until pain onset, history of high purine diet."],
+          ["Pariksha & Nadi", "Crepitus on flexion, no local erythema. Pulse: Vata pradhana."]
+        ],
+        documents: [
+          {
+            title: "Bilateral Knee X-Ray",
+            type: "Radiology",
+            date: "10 days ago",
+            desc: "AIIMS Radiology Unit",
+            flags: [{ text: "Joint space narrowing (Grade II)", type: "critical" }, { text: "Mild osteophytes", type: "critical" }]
+          }
+        ],
+        transcript: [
+          { speaker: "Kiosk AI", orig: "नमस्कार सुरेशजी, गुडघ्याच्या त्रासाबद्दल माहिती द्या.", trans: "Namaskar Suresh ji, please describe the knee issue.", isKiosk: true },
+          { speaker: "Suresh Patil", orig: "सकाळी उठल्यावर दोन्ही गुडघे जाम होतात, पायऱ्या चढताना खूप कळ येते.", trans: "Both knees feel stiff on waking in morning, sharp pain while climbing stairs.", isKiosk: false }
+        ]
+      },
+      {
+        id: "p-1046",
+        token: "A-1046",
+        name: "Nandini Rao",
+        age: 36,
+        sex: "F",
+        department: "General Medicine",
+        language: "Kannada",
+        status: "intake",
+        wait_time: "16 min",
+        complaint: "Recurrent headache",
+        risk: "medium",
+        abha: "Verified",
+        mode: "allopathic",
+        arrived: "09:39",
+        alert: null,
+        allopathicSummary: [
+          ["Chief complaint", "Recurrent throbbing unilateral temporal headache for 6 weeks, occurring 2-3 times per week."],
+          ["History of present illness", "Episodes last 4-8 hours. Associated with photophobia and nausea. Relieved by dark room. Triggered by screen glare and missed meals."],
+          ["Past history", "Family history of migraine (mother)."],
+          ["Medications & allergies", "Paracetamol 650mg PRN with partial relief. NKDA."],
+          ["Review of systems", "Normal visual acuity, no focal neurological deficits."]
+        ],
+        ayushSummary: [
+          ["Pradhana Vedana", "Ardhavabhedaka (unilateral headache) with nausea and photophobia."],
+          ["Prakriti & Dosha", "Pitta-Vata dominant, Shiroroga."],
+          ["Agni", "Tikshnagni with pitta aggravation."],
+          ["Ahara & Vihara", "Irregular sleep, fasting during festivals, excessive screen exposure."]
+        ],
+        documents: [
+          {
+            title: "Neuro-Ophthalmology Exam",
+            type: "Specialist Note",
+            date: "2 weeks ago",
+            desc: "Fundus Examination Normal",
+            flags: [{ text: "No papilledema", type: "ok" }, { text: "Normal IOP", type: "ok" }]
+          }
+        ],
+        transcript: [
+          { speaker: "Kiosk AI", orig: "ನಮಸ್ಕಾರ ನಂದಿನಿ ಅವರೇ, ತಲೆನೋವಿನ ಬಗ್ಗೆ ತಿಳಿಸಿ.", trans: "Namaskara Nandini, please tell us about your headache.", isKiosk: true },
+          { speaker: "Nandini Rao", orig: "ವಾರಕ್ಕೆ 2-3 ಬಾರಿ ಎಡಭಾಗದ ತಲೆ ವಿಪರೀತ ನೋಯುತ್ತದೆ, ಬೆಳಕು ನೋಡಲು ಆಗಲ್ಲ.", trans: "2-3 times a week left side of head throbs severely, cannot look at light.", isKiosk: false }
+        ]
+      },
+      {
+        id: "p-1047",
+        token: "A-1047",
+        name: "Rajesh Verma",
+        age: 51,
+        sex: "M",
+        department: "General Medicine",
+        language: "Hindi",
+        status: "ready",
+        wait_time: "22 min",
+        complaint: "Diabetes follow-up & HbA1c review",
+        risk: "low",
+        abha: "Verified",
+        mode: "allopathic",
+        arrived: "09:45",
+        alert: null,
+        allopathicSummary: [
+          ["Chief complaint", "3-month routine follow-up for Type 2 Diabetes Mellitus and Essential Hypertension."],
+          ["History of present illness", "Good treatment adherence. Home FBS average 128 mg/dL. No polyuria, polydipsia, or blurred vision."],
+          ["Past history", "T2DM (6 yrs), Hypertension (4 yrs)."],
+          ["Medications & allergies", "Metformin 1000 mg BD, Telmisartan 40 mg OD. NKDA."]
+        ],
+        ayushSummary: [
+          ["Pradhana Vedana", "Prameha (Madhumeha) follow-up."],
+          ["Prakriti & Dosha", "Kapha-Pitta dominant."],
+          ["Agni", "Mandaagni, Medo-dhatu vriddhi."]
+        ],
+        documents: [
+          {
+            title: "HbA1c & Renal Function Test",
+            type: "Lab Report",
+            date: "Yesterday",
+            desc: "AIIMS Central Lab",
+            flags: [{ text: "HbA1c 7.1%", type: "ok" }, { text: "Serum Creatinine 0.9 Normal", type: "ok" }]
+          }
+        ],
+        transcript: [
+          { speaker: "Kiosk AI", orig: "नमस्ते राजेश जी, शुगर और बीपी की दवाएं नियमित चल रही हैं?", trans: "Namaste Rajesh ji, are diabetes and BP medications regular?", isKiosk: true },
+          { speaker: "Rajesh Verma", orig: "जी हां, दवाएं रोज़ ले रहा हूं, सुबह की शुगर 120-130 के बीच रहती है।", trans: "Yes, taking daily, morning fasting glucose stays around 120-130.", isKiosk: false }
+        ]
+      },
+      {
+        id: "p-1048",
+        token: "A-1048",
+        name: "Sunita Devi",
+        age: 62,
+        sex: "F",
+        department: "General Medicine",
+        language: "Hindi",
+        status: "priority",
+        wait_time: "25 min",
+        complaint: "High fever + productive cough (SpO2 93%)",
+        risk: "high",
+        abha: "Verified",
+        mode: "allopathic",
+        arrived: "09:50",
+        alert: "High fever (102°F) with SpO2 93% on room air and tachypnea detected at Kiosk triage. Urgent review needed.",
+        alertMeta: "AI confidence 96% · Flagged 1 min ago",
+        allopathicSummary: [
+          ["Chief complaint", "High-grade fever (102°F) with rigors and productive cough with yellowish sputum for 4 days."],
+          ["History of present illness", "Dyspnea on minimal exertion (NYHA Class II). Pleuritic right-sided chest pain on deep inspiration. Kiosk vitals: SpO2 93%, RR 26/min, HR 102 bpm."],
+          ["Past history", "Chronic Bronchitis (COPD Stage 1)."],
+          ["Medications & allergies", "Inhaler Formoterol/Budesonide PRN. NKDA."]
+        ],
+        ayushSummary: [
+          ["Pradhana Vedana", "Jwara (high fever) with Kasa (productive cough) and Shwasa."],
+          ["Prakriti & Dosha", "Vata-Kapha Sannipataja Jwara, Pranavaha Srotas dusti."],
+          ["Agni", "Teevra Agni mandya, Aama lakshana."]
+        ],
+        documents: [
+          {
+            title: "Kiosk Vital Signs Vitals-Print",
+            type: "Diagnostics",
+            date: "Today, 09:52 AM",
+            desc: "Terminal 02 Auto-Sensor",
+            flags: [{ text: "SpO2 93% ↓ Low", type: "critical" }, { text: "RR 26/min ↑ High", type: "critical" }, { text: "Temp 102.1°F ↑", type: "critical" }]
+          }
+        ],
+        transcript: [
+          { speaker: "Kiosk AI", orig: "नमस्ते सुनीता जी, बुखार कितने दिन से है और सांस में तकलीफ हो रही है?", trans: "Namaste Sunita ji, how long has the fever been present and is breathing difficult?", isKiosk: true },
+          { speaker: "Sunita Devi", orig: "4 दिन से तेज बुखार है, खांसी में पीला बलगम आ रहा है और सांस फूल रही है।", trans: "High fever for 4 days, coughing yellow phlegm and feeling short of breath.", isKiosk: false }
+        ]
+      }
+    ];
+
+    // ═══════════════════════════════════════════════════════════════
+    // APP STATE
+    // ═══════════════════════════════════════════════════════════════
+    let activePatientId = "p-1042";
+    let activeMode = "allopathic"; // "allopathic" | "ayush"
+    let activeFilter = "all";      // "all" | "priority" | "ready"
+    let searchQuery = "";
+    let isEditingSummary = false;
+    let acknowledgedAlerts = new Set();
+    let currentTab = "summary";     // "summary" | "docs" | "transcript"
+
+    // ═══════════════════════════════════════════════════════════════
+    // DOM ELEMENTS
+    // ═══════════════════════════════════════════════════════════════
+    const patientListContainer = document.getElementById('patient-list-container');
+    const queueSearchInput = document.getElementById('queue-search');
+    const filterButtons = document.querySelectorAll('.filter-tabs .filter-btn');
+    const modeBtnAllopathic = document.getElementById('btn-mode-allopathic');
+    const modeBtnAyush = document.getElementById('btn-mode-ayush');
+    const modeStatusText = document.getElementById('mode-status-text');
+
+    // Detail elements
+    const detailAvatar = document.getElementById('detail-avatar');
+    const detailName = document.getElementById('detail-name');
+    const detailDemographics = document.getElementById('detail-demographics');
+    const detailLang = document.getElementById('detail-lang');
+    const detailModeTag = document.getElementById('detail-mode-tag');
+    const triageAlertBanner = document.getElementById('triage-alert-banner');
+    const alertTextContent = document.getElementById('alert-text-content');
+    const btnAcknowledgeAlert = document.getElementById('btn-acknowledge-alert');
+    const summarySectionsContainer = document.getElementById('summary-sections-container');
+    const docsStripCount = document.getElementById('docs-strip-count');
+    const docsCountBadge = document.getElementById('docs-count-badge');
+    const documentsGridContainer = document.getElementById('documents-grid-container');
+    const transcriptContainer = document.getElementById('transcript-container');
+
+    // Action buttons
+    const btnEditSummary = document.getElementById('btn-edit-summary');
+    const editBtnText = document.getElementById('edit-btn-text');
+    const btnSaveContinue = document.getElementById('btn-save-continue');
+    const saveBtnLabel = document.getElementById('save-btn-label');
+    const btnFhirPreview = document.getElementById('btn-fhir-preview');
+    const fhirModal = document.getElementById('fhir-modal');
+    const closeFhirModal = document.getElementById('close-fhir-modal');
+    const btnCopyFhir = document.getElementById('btn-copy-fhir');
+    const btnDoneFhir = document.getElementById('btn-done-fhir');
+    const fhirJsonCode = document.getElementById('fhir-json-code');
+
+    // Toast
+    const toastEl = document.getElementById('toast-el');
+    const toastText = document.getElementById('toast-text');
+
+    function showToast(msg, duration = 3000) {
+      toastText.textContent = msg;
+      toastEl.style.display = 'flex';
+      setTimeout(() => {
+        toastEl.style.display = 'none';
+      }, duration);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // RENDER FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    function getVisiblePatients() {
+      return patients.filter(p => {
+        const matchesFilter = (activeFilter === "all") || (p.status === activeFilter);
+        const matchesSearch = searchQuery === "" || 
+          `${p.name} ${p.token} ${p.complaint} ${p.department} ${p.language}`.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesFilter && matchesSearch;
+      });
+    }
+
+    function renderPatientList() {
+      const visible = getVisiblePatients();
+      patientListContainer.innerHTML = "";
+
+      if (visible.length === 0) {
+        patientListContainer.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--muted); font-size: 11px;">No patients match the search or filter criteria.</div>`;
+        return;
+      }
+
+      visible.forEach(p => {
+        const row = document.createElement('button');
+        row.className = `patient-row ${p.id === activePatientId ? 'selected' : ''}`;
+        row.setAttribute('data-patient-id', p.id);
+        row.setAttribute('role', 'listitem');
+
+        const initials = p.name.split(" ").map(n => n[0]).join("");
+        const avatarClass = p.risk === "high" ? "avatar-high" : p.risk === "medium" ? "avatar-medium" : "avatar-low";
+        const statusClass = p.status === "priority" ? "status-priority" : p.status === "ready" ? "status-ready" : "status-intake";
+        const statusLabel = p.status === "priority" ? "Priority review" : p.status === "ready" ? "Ready" : "AI intake";
+
+        row.innerHTML = `
+          <div class="patient-avatar ${avatarClass}">${initials}</div>
+          <div class="patient-main">
+            <div class="patient-name-row">
+              <span class="patient-name">${p.name}</span>
+              ${p.status === 'priority' ? '<span class="priority-icon" title="Priority High Risk">!</span>' : ''}
+              <span class="token-badge">${p.token}</span>
+            </div>
+            <div class="patient-complaint">${p.complaint}</div>
+            <div class="patient-meta-row">
+              <span class="lang-tag">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                ${p.language}
+              </span>
+              <span class="status-badge ${statusClass}">${statusLabel}</span>
+            </div>
+          </div>
+          <div class="patient-time">
+            <span class="patient-wait ${p.status === 'priority' ? 'priority' : ''}">${p.wait_time}</span>
+            <span class="patient-arrived">${p.arrived}</span>
+          </div>
+        `;
+
+        row.addEventListener('click', () => {
+          activePatientId = p.id;
+          isEditingSummary = false;
+          renderPatientList();
+          renderPatientDetail();
+        });
+
+        patientListContainer.appendChild(row);
+      });
+    }
+
+    function renderPatientDetail() {
+      const p = patients.find(item => item.id === activePatientId) || patients[0];
+      if (!p) return;
+
+      // Identity
+      detailAvatar.textContent = p.name.split(" ").map(n => n[0]).join("");
+      detailAvatar.className = `large-avatar ${p.risk === 'high' ? 'avatar-high' : p.risk === 'medium' ? 'avatar-medium' : 'avatar-low'}`;
+      detailName.textContent = p.name;
+      detailDemographics.textContent = `${p.age} years · ${p.sex === 'F' ? 'Female' : 'Male'} · ${p.token} · ${p.department}`;
+      detailLang.textContent = p.language;
+
+      // Mode Tag
+      const isAyushMode = (activeMode === "ayush" || p.mode === "ayush");
+      detailModeTag.textContent = isAyushMode ? "AYUSH intake" : "Allopathic intake";
+      detailModeTag.className = `pill-tag ${isAyushMode ? 'ayush' : 'allopathic'}`;
+
+      // Priority Alert Banner
+      const isAcked = acknowledgedAlerts.has(p.id);
+      if (p.alert && !isAcked) {
+        triageAlertBanner.style.display = 'flex';
+        alertTextContent.textContent = p.alert;
+        btnAcknowledgeAlert.className = 'ack-btn';
+        btnAcknowledgeAlert.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Acknowledge</span>
+        `;
+      } else {
+        triageAlertBanner.style.display = 'none';
+      }
+
+      // Summary Sections
+      const sections = isAyushMode ? (p.ayushSummary || p.allopathicSummary) : p.allopathicSummary;
+      summarySectionsContainer.innerHTML = "";
+
+      sections.forEach(([title, text], idx) => {
+        const block = document.createElement('div');
+        block.className = 'summary-block';
+        if (isEditingSummary) {
+          block.innerHTML = `
+            <div class="summary-title">${title}</div>
+            <textarea class="summary-textarea" data-idx="${idx}">${text}</textarea>
+          `;
+        } else {
+          block.innerHTML = `
+            <div class="summary-title">${title}</div>
+            <div class="summary-text">${text}</div>
+          `;
+        }
+        summarySectionsContainer.appendChild(block);
+      });
+
+      editBtnText.textContent = isEditingSummary ? "Save edits" : "Edit summary";
+
+      // Documents summary strip
+      const docCount = p.documents ? p.documents.length : 0;
+      docsCountBadge.textContent = docCount;
+      docsStripCount.textContent = `${docCount} documents · ${docCount > 1 ? '2 findings' : '1 finding'}`;
+
+      // Documents Tab Grid
+      documentsGridContainer.innerHTML = "";
+      if (p.documents && p.documents.length > 0) {
+        p.documents.forEach(doc => {
+          const card = document.createElement('div');
+          card.className = 'doc-card';
+          card.innerHTML = `
+            <div class="doc-icon-row">
+              <span class="doc-type-badge">${doc.type}</span>
+              <span style="font-size: 9.5px; color: var(--muted);">${doc.date}</span>
+            </div>
+            <div class="doc-title">${doc.title}</div>
+            <div class="doc-desc">${doc.desc}</div>
+            <div class="doc-flags">
+              ${doc.flags.map(f => `<span class="doc-flag ${f.type}">${f.text}</span>`).join('')}
+            </div>
+          `;
+          card.addEventListener('click', () => {
+            showToast(`Opened scanned document: ${doc.title}`);
+          });
+          documentsGridContainer.appendChild(card);
+        });
+      }
+
+      // Transcript Tab
+      transcriptContainer.innerHTML = "";
+      if (p.transcript && p.transcript.length > 0) {
+        p.transcript.forEach(msg => {
+          const bubble = document.createElement('div');
+          bubble.className = `chat-bubble ${msg.isKiosk ? 'kiosk' : 'patient'}`;
+          bubble.innerHTML = `
+            <span class="chat-speaker">${msg.speaker}</span>
+            <div class="chat-original">"${msg.orig}"</div>
+            <div class="chat-translated">${msg.trans}</div>
+          `;
+          transcriptContainer.appendChild(bubble);
+        });
+      }
+
+      // Save button status reset
+      saveBtnLabel.textContent = "Save & continue";
+      btnSaveContinue.classList.remove('saved');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // EVENT LISTENERS
+    // ═══════════════════════════════════════════════════════════════
+
+    // Search filter
+    queueSearchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderPatientList();
+    });
+
+    // Queue filter tabs
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        activeFilter = btn.getAttribute('data-filter');
+        renderPatientList();
+      });
+    });
+
+    // Mode toggles
+    modeBtnAllopathic.addEventListener('click', () => {
+      activeMode = "allopathic";
+      modeBtnAllopathic.classList.add('selected');
+      modeBtnAyush.classList.remove('selected');
+      modeStatusText.textContent = "Vital signs · SOCRATES · ROS";
+      renderPatientDetail();
+      showToast("Clinical context switched to Allopathic mode");
+    });
+
+    modeBtnAyush.addEventListener('click', () => {
+      activeMode = "ayush";
+      modeBtnAyush.classList.add('selected');
+      modeBtnAllopathic.classList.remove('selected');
+      modeStatusText.textContent = "Prakriti · Agni · Dashavidha";
+      renderPatientDetail();
+      showToast("Clinical context switched to AYUSH mode");
+    });
+
+    // Acknowledge alert
+    btnAcknowledgeAlert.addEventListener('click', () => {
+      acknowledgedAlerts.add(activePatientId);
+      triageAlertBanner.style.display = 'none';
+      // Decrement alert counter
+      const currentAlerts = Math.max(0, parseInt(document.getElementById('metric-alerts').textContent) - 1);
+      document.getElementById('metric-alerts').textContent = currentAlerts;
+      showToast("✓ Priority alert acknowledged by Dr. Sharma");
+    });
+
+    // Tabs switching
+    const tabButtons = document.querySelectorAll('.detail-tabs .tab-btn');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+
+        const targetTab = btn.getAttribute('data-tab');
+        document.getElementById('tab-pane-summary').style.display = targetTab === 'summary' ? 'block' : 'none';
+        document.getElementById('tab-pane-docs').style.display = targetTab === 'docs' ? 'block' : 'none';
+        document.getElementById('tab-pane-transcript').style.display = targetTab === 'transcript' ? 'block' : 'none';
+      });
+    });
+
+    // Edit summary toggle
+    btnEditSummary.addEventListener('click', () => {
+      if (isEditingSummary) {
+        // Save edits
+        const p = patients.find(item => item.id === activePatientId);
+        const textareas = summarySectionsContainer.querySelectorAll('textarea');
+        const isAyushMode = (activeMode === "ayush" || p.mode === "ayush");
+        const targetSummary = isAyushMode ? p.ayushSummary : p.allopathicSummary;
+
+        textareas.forEach(t => {
+          const idx = parseInt(t.getAttribute('data-idx'));
+          if (targetSummary && targetSummary[idx]) {
+            targetSummary[idx][1] = t.value;
+          }
+        });
+        isEditingSummary = false;
+        renderPatientDetail();
+        showToast("✓ Clinical summary edits saved");
+      } else {
+        isEditingSummary = true;
+        renderPatientDetail();
+      }
+    });
+
+    // Save & continue
+    btnSaveContinue.addEventListener('click', () => {
+      const p = patients.find(item => item.id === activePatientId);
+      if (p) {
+        p.status = "ready";
+        renderPatientList();
+      }
+      btnSaveContinue.classList.add('saved');
+      saveBtnLabel.textContent = "✓ Record Signed & Ready";
+      showToast(`✓ Patient record signed & queued for OPD consultation: ${p ? p.name : ''}`);
+    });
+
+    // FHIR JSON Preview Modal
+    function generateFhirJson() {
+      const p = patients.find(item => item.id === activePatientId) || patients[0];
+      const bundle = {
+        resourceType: "Bundle",
+        id: `medikiosk-intake-${p.token.toLowerCase()}`,
+        type: "document",
+        timestamp: new Date().toISOString(),
+        entry: [
+          {
+            resource: {
+              resourceType: "Composition",
+              status: "final",
+              type: {
+                coding: [{ system: "http://loinc.org", code: "11488-4", display: "Consultation note" }]
+              },
+              subject: { reference: `Patient/${p.token}`, display: p.name },
+              date: new Date().toISOString(),
+              author: [{ display: "MediKiosk Intake AI Engine v2.4" }],
+              title: `${p.mode.toUpperCase()} Clinical Intake Summary`
+            }
+          },
+          {
+            resource: {
+              resourceType: "Patient",
+              id: p.token,
+              identifier: [{ system: "https://healthid.ndhm.gov.in", value: `ABHA-91-${p.token}` }],
+              name: [{ text: p.name }],
+              gender: p.sex === "F" ? "female" : "male",
+              birthDate: `${2024 - p.age}-01-01`
+            }
+          },
+          {
+            resource: {
+              resourceType: "Condition",
+              clinicalStatus: { coding: [{ code: "active" }] },
+              verificationStatus: { coding: [{ code: "confirmed" }] },
+              code: { text: p.complaint },
+              subject: { reference: `Patient/${p.token}` }
+            }
+          }
+        ]
+      };
+      return JSON.stringify(bundle, null, 2);
+    }
+
+    btnFhirPreview.addEventListener('click', () => {
+      fhirJsonCode.textContent = generateFhirJson();
+      fhirModal.style.display = 'flex';
+    });
+
+    closeFhirModal.addEventListener('click', () => { fhirModal.style.display = 'none'; });
+    btnDoneFhir.addEventListener('click', () => { fhirModal.style.display = 'none'; });
+    fhirModal.addEventListener('click', (e) => { if (e.target === fhirModal) fhirModal.style.display = 'none'; });
+
+    btnCopyFhir.addEventListener('click', () => {
+      navigator.clipboard.writeText(fhirJsonCode.textContent).then(() => {
+        showToast("✓ FHIR JSON bundle copied to clipboard");
+      });
+    });
+
+    // Add Document Modal simulation
+    const addDocModal = document.getElementById('add-doc-modal');
+    const btnAddDocTrigger = document.getElementById('btn-add-doc-trigger');
+    const closeAddDocModal = document.getElementById('close-add-doc-modal');
+    const cancelAddDoc = document.getElementById('cancel-add-doc');
+    const simulateScanDoc = document.getElementById('simulate-scan-doc');
+    const btnUploadDocTab = document.getElementById('btn-upload-doc-tab');
+
+    function openAddDoc() { addDocModal.style.display = 'flex'; }
+    function closeAddDoc() { addDocModal.style.display = 'none'; }
+
+    btnAddDocTrigger.addEventListener('click', openAddDoc);
+    btnUploadDocTab.addEventListener('click', openAddDoc);
+    closeAddDocModal.addEventListener('click', closeAddDoc);
+    cancelAddDoc.addEventListener('click', closeAddDoc);
+    addDocModal.addEventListener('click', (e) => { if (e.target === addDocModal) closeAddDoc(); });
+
+    simulateScanDoc.addEventListener('click', () => {
+      const p = patients.find(item => item.id === activePatientId);
+      if (p) {
+        if (!p.documents) p.documents = [];
+        p.documents.push({
+          title: "Additional Clinical Paper Scan",
+          type: "Scanned Paper",
+          date: "Just now",
+          desc: "Digitized via MediKiosk OCR Engine",
+          flags: [{ text: "OCR Verified", type: "ok" }]
+        });
+        renderPatientDetail();
+        closeAddDoc();
+        showToast("✓ Document digitized & attached to clinical record");
+      }
+    });
+
+    // View Full Queue Modal
+    const fullQueueModal = document.getElementById('full-queue-modal');
+    const btnViewFullQueue = document.getElementById('btn-view-full-queue');
+    const closeFullQueue = document.getElementById('close-full-queue');
+    const fullQueueRoster = document.getElementById('full-queue-roster');
+    const navQueue = document.getElementById('nav-queue');
+
+    function openFullQueue() {
+      fullQueueRoster.innerHTML = "";
+      patients.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'patient-row';
+        item.style.cursor = 'pointer';
+        item.innerHTML = `
+          <div class="patient-avatar ${p.risk === 'high' ? 'avatar-high' : p.risk === 'medium' ? 'avatar-medium' : 'avatar-low'}">
+            ${p.name.split(" ").map(n => n[0]).join("")}
+          </div>
+          <div class="patient-main">
+            <div class="patient-name-row">
+              <span class="patient-name">${p.name}</span>
+              <span class="token-badge">${p.token}</span>
+            </div>
+            <div class="patient-complaint">${p.complaint} · ${p.department}</div>
+          </div>
+          <div class="patient-time">
+            <span class="patient-wait ${p.status === 'priority' ? 'priority' : ''}">${p.wait_time}</span>
+            <span class="patient-arrived">${p.arrived}</span>
+          </div>
+        `;
+        item.addEventListener('click', () => {
+          activePatientId = p.id;
+          renderPatientList();
+          renderPatientDetail();
+          fullQueueModal.style.display = 'none';
+        });
+        fullQueueRoster.appendChild(item);
+      });
+      fullQueueModal.style.display = 'flex';
+    }
+
+    btnViewFullQueue.addEventListener('click', openFullQueue);
+    navQueue.addEventListener('click', openFullQueue);
+    closeFullQueue.addEventListener('click', () => { fullQueueModal.style.display = 'none'; });
+    fullQueueModal.addEventListener('click', (e) => { if (e.target === fullQueueModal) fullQueueModal.style.display = 'none'; });
+
+    // Sidebar notification & export clicks
+    document.getElementById('btn-notifications')?.addEventListener('click', () => {
+      showToast("2 Priority alerts: Meena Kumari (A-1042) & Sunita Devi (A-1048)");
+    });
+    document.getElementById('btn-export-transcript').addEventListener('click', () => {
+      showToast("✓ Audio transcript exported as encrypted clinical audit log");
+    });
+
+    // Keyboard ESC to close modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        fhirModal.style.display = 'none';
+        addDocModal.style.display = 'none';
+        fullQueueModal.style.display = 'none';
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // INITIAL BOOT
+    // ═══════════════════════════════════════════════════════════════
+    renderPatientList();
+    renderPatientDetail();
+  </script>
+
+</body>
+</html>

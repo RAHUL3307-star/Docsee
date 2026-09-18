@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediKiosk — Privacy, ABDM Consent & Data Governance</title>
+  <meta name="description" content="ABDM compliant patient consent architecture, DPDP Act 2023 governance, and real-time clinical audit trail for MediKiosk.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    .governance-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .gov-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .gov-title {
+      font: 700 15px var(--font-heading);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .gov-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .consent-status-badge {
+      font: 700 10px var(--font-mono);
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .consent-status-badge.active {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+    }
+    .consent-status-badge.revoked {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    /* TOGGLES */
+    .toggle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    .toggle-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .toggle-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .toggle-desc {
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--teal); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* AUDIT LOG TABLE */
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .audit-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: #f8fafc;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      border-bottom: 1px solid var(--line);
+    }
+    .audit-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+    }
+    .audit-table tr:hover td {
+      background: #f8fafc;
+    }
+    .audit-time {
+      font: 600 11px var(--font-mono);
+      color: var(--muted);
+    }
+    .audit-actor {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .audit-role {
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .audit-badge {
+      display: inline-block;
+      font: 700 10px var(--font-mono);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .audit-badge.allow {
+      background: #ecfdf5;
+      color: #059669;
+    }
+    .audit-badge.block {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    /* PRINCIPLES CARDS */
+    .principles-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .principle-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .principle-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 12px;
+    }
+    .principle-title {
+      font: 700 13px var(--font-heading);
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .principle-text {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .btn-revoke {
+      width: 100%;
+      padding: 10px 16px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      color: var(--red);
+      font: 700 12px var(--font-sans);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-revoke:hover {
+      background: var(--red);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" data-testid="main-navigation" role="navigation">
+    <a href="index.html" class="brand" title="MediKiosk OPD Intelligence">
+      <div class="brand-mark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
+      </div>
+      <div><strong>MediKiosk</strong><span>OPD Intelligence</span></div>
+    </a>
+    <a href="index.html" class="back-to-landing"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span>Return to Landing Page</span></a>
+    <div class="facility"><div class="facility-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg></div><div><b>AIIMS New Delhi</b><span>Medicine OPD · Floor 2</span></div></div>
+    
+    <p class="nav-label">Workspace</p>
+    <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Dashboard</span></a>
+    <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Patient queue</span></a>
+    <a href="intake.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span>Patient intake</span></a>
+    <a href="casesheet.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg><span>Digital case sheet</span></a>
+
+    <p class="nav-label nav-spacer">System</p>
+    <a href="analytics.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>OPD analytics</span></a>
+    <a href="privacy.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg><span>Privacy &amp; consent</span></a>
+
+    <div class="sidebar-bottom">
+      <div class="secure-note"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg><div><b>ABDM Gateway Active</b><br><span>M1 · M2 · M3 Certified</span></div></div>
+      <div class="profile"><div class="profile-avatar">PS</div><div><b>Dr. Priya Sharma</b><span>Physician · OPD 2</span></div></div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" role="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Ayushman Bharat Digital Mission (ABDM) · Consent Manager</p>
+        <h1 class="heading-line">Privacy &amp; Data Governance <span class="sparkle">✦</span></h1>
+      </div>
+      <div class="top-actions">
+        <div class="live-pill"><span class="live-dot"></span><span>DPDP Act 2023 Compliant</span></div>
+        <a href="casesheet.html" class="btn-action" style="background:var(--teal); color:#fff; text-decoration:none; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+          <span>View Case Sheet</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- METRIC CARDS -->
+    <section class="metrics-grid" aria-label="Privacy KPIs">
+      <div class="metric-card">
+        <div class="metric-header"><div class="metric-icon teal"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg></div><span class="metric-arrow">↗</span></div>
+        <div class="metric-label">Active consent artifacts</div>
+        <div class="metric-value">1,482</div>
+        <div class="metric-sub">99.4% patient consent rate</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header"><div class="metric-icon green"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><span class="metric-arrow">✓</span></div>
+        <div class="metric-label">Payload encryption</div>
+        <div class="metric-value">AES-256</div>
+        <div class="metric-sub green">FHIR R4 end-to-end tokenized</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header"><div class="metric-icon blue"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg></div><span class="metric-arrow">✓</span></div>
+        <div class="metric-label">Raw audio retention</div>
+        <div class="metric-value">0 Bytes</div>
+        <div class="metric-sub">Ephemeral on-device extraction</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-header"><div class="metric-icon red"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></div><span class="metric-arrow">↘</span></div>
+        <div class="metric-label">Instant revocations</div>
+        <div class="metric-value" id="metric-revocations">14</div>
+        <div class="metric-sub">Real-time token nullification</div>
+      </div>
+    </section>
+
+    <!-- CORE PRINCIPLES -->
+    <div class="principles-row">
+      <div class="principle-card">
+        <div class="principle-icon" style="background:var(--teal-light); color:var(--teal);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <div class="principle-title">ABDM Milestone 1, 2 &amp; 3 Certified</div>
+        <p class="principle-text">Full compatibility with Ayushman Bharat Digital Mission. Acts as an authorized Health Information User (HIU) and Provider (HIP) with cryptographic consent validation.</p>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon" style="background:#eff6ff; color:var(--blue);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        </div>
+        <div class="principle-title">DPDP Act 2023 &amp; DISHA Compliant</div>
+        <p class="principle-text">Strict adherence to Indian data sovereignty laws. Data is localized on national servers; patients retain absolute right to access, correct, and revoke consent at any moment.</p>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon" style="background:#fef2f2; color:var(--red);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        </div>
+        <div class="principle-title">Zero Raw Audio Storage Policy</div>
+        <p class="principle-text">Multilingual patient speech is processed in volatile memory. No audio recordings are ever persisted to disk or external cloud servers, preventing biometric voice leakage.</p>
+      </div>
+    </div>
+
+    <!-- GOVERNANCE INTERFACE -->
+    <div class="governance-grid">
+      <!-- Consent Manager Simulation -->
+      <div class="gov-card">
+        <div class="gov-title">
+          <span>Active Patient Consent Artifact</span>
+          <span class="consent-status-badge active" id="badge-consent-status">ACTIVE · GRANTED</span>
+        </div>
+        <div class="gov-sub">
+          Current session: <strong>Meena Kumari</strong> · ABHA ID: <code style="font-family:var(--font-mono); color:var(--teal-dark);">91-4432-8871-0024</code> (Artifact #ABDM-CA-98124)
+        </div>
+
+        <div class="toggle-list">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Clinical Intake &amp; HPI Sharing</div>
+              <div class="toggle-desc">Permit consulting doctor to view AI-synthesized chief complaint narrative</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-hpi" checked onchange="recordToggleChange('Clinical Intake')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">AYUSH Integrative Data Exchange</div>
+              <div class="toggle-desc">Allow sharing Prakriti, Dosha &amp; Ayurvedic records with AYUSH wing</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-ayush" checked onchange="recordToggleChange('AYUSH Records')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">Diagnostic Lab Reports &amp; Imaging</div>
+              <div class="toggle-desc">Access to 2D Echo, ECG, and pathology results within OPD session</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-lab" checked onchange="recordToggleChange('Diagnostic Reports')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-title">National Health Locker Auto-Sync</div>
+              <div class="toggle-desc">Deposit finalized digital case sheet to patient's ABHA PHR app</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-phr" checked onchange="recordToggleChange('ABDM PHR Sync')">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn-revoke" id="btn-revoke-action" onclick="simulateRevocation()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <span>Simulate Instant Patient Consent Revocation</span>
+        </button>
+      </div>
+
+      <!-- Cryptographic Architecture Summary -->
+      <div class="gov-card">
+        <div class="gov-title">
+          <span>Security &amp; Cryptographic Architecture</span>
+          <span style="font-size:10px; font-weight:700; color:var(--teal);">TLS 1.3 · RSA-2048</span>
+        </div>
+        <div class="gov-sub">Technical audit parameters enforced on all incoming OPD data streams.</div>
+
+        <div style="display:flex; flex-direction:column; gap:12px; font-size:12px;">
+          <div style="padding:12px; background:#f8fafc; border:1px solid var(--line); border-radius:8px;">
+            <strong style="color:var(--ink); display:block; margin-bottom:4px;">Consent Manager Protocol:</strong>
+            <span style="color:var(--muted); font-size:11px;">Implements ABDM HIU-v0.5 gateway specifications with mutual TLS (mTLS) certificate exchange.</span>
+          </div>
+
+          <div style="padding:12px; background:#f8fafc; border:1px solid var(--line); border-radius:8px;">
+            <strong style="color:var(--ink); display:block; margin-bottom:4px;">Patient Data De-Identification:</strong>
+            <span style="color:var(--muted); font-size:11px;">Analytical telemetry strips all Direct Identifiers (Name, Phone, Aadhaar) prior to OPD throughput aggregations.</span>
+          </div>
+
+          <div style="padding:12px; background:#f8fafc; border:1px solid var(--line); border-radius:8px;">
+            <strong style="color:var(--ink); display:block; margin-bottom:4px;">Data Retention Horizon:</strong>
+            <span style="color:var(--muted); font-size:11px;">Live session caches auto-purge within 24 hours of OPD closure; encrypted EMR committed to hospital HIS.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT TRAIL TABLE -->
+    <div class="gov-card">
+      <div class="gov-title">
+        <span>Real-Time Clinical Access Audit Trail</span>
+        <button onclick="exportAuditLog()" style="background:transparent; border:1px solid var(--line); padding:5px 10px; border-radius:6px; font-size:11px; font-weight:600; color:var(--ink); cursor:pointer;">Export Audit CSV</button>
+      </div>
+      <div class="gov-sub">Immutable, timestamped record of all clinical record reads and consent modifications.</div>
+
+      <div style="overflow-x:auto;">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Actor &amp; Role</th>
+              <th>Patient ABHA</th>
+              <th>Resource / Purpose</th>
+              <th>Facility / IP</th>
+              <th>Access Status</th>
+            </tr>
+          </thead>
+          <tbody id="audit-log-body">
+            <tr>
+              <td class="audit-time">10:14:22 AM</td>
+              <td>
+                <div class="audit-actor">Dr. Priya Sharma</div>
+                <div class="audit-role">Consulting Physician (OPD 2)</div>
+              </td>
+              <td><code>91-4432-8871-0024</code></td>
+              <td>Clinical Summary · Direct Patient Care</td>
+              <td>AIIMS OPD #2 (10.12.4.88)</td>
+              <td><span class="audit-badge allow">GRANTED · 200 OK</span></td>
+            </tr>
+            <tr>
+              <td class="audit-time">10:11:05 AM</td>
+              <td>
+                <div class="audit-actor">MediKiosk Kiosk Terminal #4</div>
+                <div class="audit-role">Intake Edge Device</div>
+              </td>
+              <td><code>91-4432-8871-0024</code></td>
+              <td>Patient Vitals Telemetry Write</td>
+              <td>AIIMS Waiting Area B (10.12.8.12)</td>
+              <td><span class="audit-badge allow">AUTHENTICATED</span></td>
+            </tr>
+            <tr>
+              <td class="audit-time">10:05:40 AM</td>
+              <td>
+                <div class="audit-actor">Dr. Rajesh Varma</div>
+                <div class="audit-role">AYUSH Vaidya · Integrative Wing</div>
+              </td>
+              <td><code>91-4432-8871-0024</code></td>
+              <td>Prakriti &amp; Dosha Assessment Read</td>
+              <td>AIIMS AYUSH OPD (10.12.4.92)</td>
+              <td><span class="audit-badge allow">GRANTED · 200 OK</span></td>
+            </tr>
+            <tr>
+              <td class="audit-time">09:58:12 AM</td>
+              <td>
+                <div class="audit-actor">External Insurance Query</div>
+                <div class="audit-role">Third Party TPA</div>
+              </td>
+              <td><code>91-4432-8871-0024</code></td>
+              <td>Full EMR Pull Request</td>
+              <td>External API (182.74.92.11)</td>
+              <td><span class="audit-badge block">REJECTED · NO CONSENT</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  let isRevoked = false;
+  let revocationCount = 14;
+
+  function simulateRevocation() {
+    const badge = document.getElementById('badge-consent-status');
+    const btn = document.getElementById('btn-revoke-action');
+    const revMetric = document.getElementById('metric-revocations');
+
+    if (!isRevoked) {
+      isRevoked = true;
+      badge.textContent = "REVOKED · TOKEN NULLIFIED";
+      badge.className = "consent-status-badge revoked";
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span>Re-authorize Patient Consent</span>`;
+      btn.style.color = "var(--teal-dark)";
+      btn.style.background = "var(--teal-light)";
+      btn.style.borderColor = "#ccede9";
+
+      // Turn off switches
+      document.getElementById('toggle-hpi').checked = false;
+      document.getElementById('toggle-ayush').checked = false;
+      document.getElementById('toggle-lab').checked = false;
+      document.getElementById('toggle-phr').checked = false;
+
+      revocationCount++;
+      revMetric.textContent = revocationCount;
+
+      // Add to audit table
+      addAuditRow("Patient (Meena Kumari)", "ABHA Mobile App Revocation", "ALL RECORDS", "BLOCK · REVOKED BY PATIENT");
+      alert("⚠️ Patient Meena Kumari has exercised DPDP Act Right to Revoke. All active cryptographic tokens nullified immediately across all hospital desks.");
+    } else {
+      isRevoked = false;
+      badge.textContent = "ACTIVE · GRANTED";
+      badge.className = "consent-status-badge active";
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span>Simulate Instant Patient Consent Revocation</span>`;
+      btn.style.color = "var(--red)";
+      btn.style.background = "#fef2f2";
+      btn.style.borderColor = "#fecaca";
+
+      document.getElementById('toggle-hpi').checked = true;
+      document.getElementById('toggle-ayush').checked = true;
+      document.getElementById('toggle-lab').checked = true;
+      document.getElementById('toggle-phr').checked = true;
+
+      addAuditRow("Patient (Meena Kumari)", "ABHA OTP Re-authentication", "ALL RECORDS", "GRANTED · RE-AUTHORIZED");
+    }
+  }
+
+  function recordToggleChange(resourceName) {
+    const time = new Date().toLocaleTimeString();
+    addAuditRow("Patient (Meena Kumari)", "Granular Consent Switch", resourceName, "CONSENT POLICY UPDATED");
+  }
+
+  function addAuditRow(actor, role, resource, status) {
+    const tbody = document.getElementById('audit-log-body');
+    const tr = document.createElement('tr');
+    const isBlock = status.includes('BLOCK') || status.includes('REVOKED') || status.includes('REJECTED');
+    const time = new Date().toLocaleTimeString();
+    tr.innerHTML = `
+      <td class="audit-time">${time}</td>
+      <td>
+        <div class="audit-actor">${actor}</div>
+        <div class="audit-role">${role}</div>
+      </td>
+      <td><code>91-4432-8871-0024</code></td>
+      <td>${resource}</td>
+      <td>ABDM Gateway Node</td>
+      <td><span class="audit-badge ${isBlock ? 'block' : 'allow'}">${status}</span></td>
+    `;
+    tbody.insertBefore(tr, tbody.firstChild);
+  }
+
+  function exportAuditLog() {
+    alert("✓ Cryptographically signed Audit Trail exported as CSV compliant with ABDM Audit Specifications.");
+  }
+</script>
+</body>
+</html>

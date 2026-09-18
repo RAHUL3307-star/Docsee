@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediKiosk — Digital Case Sheet & EMR Report</title>
+  <meta name="description" content="Standardized ABHA-compliant digital case history and clinical summary sheet for hospital OPD.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    :root {
+      --sheet-bg: #f8fafc;
+      --sheet-paper: #ffffff;
+      --sheet-border: #cbd5e1;
+      --sheet-ink: #0f172a;
+      --sheet-muted: #475569;
+    }
+    body {
+      background: var(--sheet-bg);
+      color: var(--sheet-ink);
+      font-family: var(--font-sans);
+    }
+    .print-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .print-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .print-bar-left a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      transition: all 0.2s;
+    }
+    .print-bar-left a:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.12);
+    }
+    .patient-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+    .patient-picker select {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+    .patient-picker select option {
+      background: #0f172a;
+      color: #fff;
+    }
+    .print-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-action {
+      padding: 7px 14px;
+      border-radius: 7px;
+      font: 600 12px var(--font-sans);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-print {
+      background: var(--teal);
+      color: #fff;
+    }
+    .btn-print:hover {
+      background: var(--teal-dark);
+      box-shadow: 0 4px 10px rgba(13,148,136,0.3);
+    }
+    .btn-share {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .btn-share:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* SHEET CONTAINER */
+    .sheet-wrapper {
+      max-width: 880px;
+      margin: 32px auto 60px;
+      padding: 0 16px;
+    }
+    .case-sheet {
+      background: var(--sheet-paper);
+      border: 1px solid var(--sheet-border);
+      border-radius: 8px;
+      padding: 44px 48px;
+      box-shadow: 0 10px 30px -8px rgba(0,0,0,0.07);
+      position: relative;
+    }
+
+    /* WATERMARK */
+    .sheet-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font: 800 64px var(--font-heading);
+      color: rgba(13,148,136,0.035);
+      pointer-events: none;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 6px;
+    }
+
+    /* HEADER */
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 20px;
+      margin-bottom: 22px;
+    }
+    .hospital-identity {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .hospital-logo {
+      width: 52px;
+      height: 52px;
+      background: var(--teal);
+      color: #fff;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .hospital-name {
+      font: 800 20px var(--font-heading);
+      color: var(--ink);
+      line-height: 1.15;
+      letter-spacing: -0.3px;
+    }
+    .hospital-dept {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--teal-dark);
+      margin-top: 3px;
+    }
+    .hospital-meta {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .sheet-badge-col {
+      text-align: right;
+    }
+    .doc-type-pill {
+      display: inline-block;
+      background: #0f172a;
+      color: #fff;
+      font: 700 11px var(--font-mono);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.8px;
+    }
+    .sheet-barcode {
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .qr-box {
+      width: 60px;
+      height: 60px;
+      border: 1px dashed var(--sheet-border);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      margin-left: auto;
+      margin-top: 6px;
+      background: #f8fafc;
+      font-size: 9px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* DEMOGRAPHICS GRID */
+    .demo-box {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1.2fr 1.5fr;
+      gap: 14px 20px;
+      margin-bottom: 24px;
+    }
+    .demo-item label {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .demo-item value {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .demo-item value.mono {
+      font-family: var(--font-mono);
+    }
+    .demo-item value.badge-abha {
+      color: var(--teal-dark);
+      background: var(--teal-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      font-size: 11px;
+    }
+
+    /* SECTION STYLES */
+    .sheet-section {
+      margin-bottom: 22px;
+    }
+    .sheet-section-title {
+      font: 800 12px var(--font-heading);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #0f172a;
+      border-bottom: 1.5px solid var(--line);
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sheet-section-tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--teal-dark);
+      background: var(--teal-light);
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    /* VITALS ROW */
+    .vitals-summary-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .vital-cell {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+    .vital-cell.warn {
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+    .vital-cell-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .vital-cell-val {
+      font: 700 15px var(--font-heading);
+      color: var(--ink);
+      margin-top: 2px;
+    }
+    .vital-cell.warn .vital-cell-val {
+      color: var(--red);
+    }
+    .vital-cell-ref {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    /* NARRATIVE & CLINICAL CARDS */
+    .narrative-box {
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--teal);
+      border-radius: 4px;
+      padding: 12px 16px;
+      background: #fafbfc;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+    .narrative-source {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    /* DUAL DIAGNOSIS GRID */
+    .diag-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .diag-col {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+      background: #fff;
+    }
+    .diag-col.ayush {
+      background: #fffbeb;
+      border-color: #fef3c7;
+    }
+    .diag-header {
+      font: 700 11px var(--font-heading);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+    .diag-item {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .diag-code {
+      font: 700 11px var(--font-mono);
+      background: #f1f5f9;
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #0f172a;
+    }
+    .diag-name {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* RX TABLE */
+    .rx-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    .rx-table th {
+      background: #f1f5f9;
+      color: var(--ink);
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .rx-table td {
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+    .rx-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .rx-name {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .rx-dose {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .rx-timing {
+      font: 700 11px var(--font-mono);
+      background: var(--teal-light);
+      color: var(--teal-dark);
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    /* FOOTER SIGNATURE BLOCK */
+    .sheet-footer {
+      border-top: 2px solid var(--ink);
+      padding-top: 20px;
+      margin-top: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .footer-left {
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .signature-block {
+      text-align: right;
+    }
+    .doc-sig-mark {
+      font-family: 'Brush Script MT', cursive, serif;
+      font-size: 26px;
+      color: #0f172a;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .doc-name {
+      font: 700 13px var(--font-heading);
+      color: var(--ink);
+    }
+    .doc-reg {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+    .verification-seal {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--teal-dark);
+      background: var(--teal-light);
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #ccede9;
+    }
+
+    /* PRINT MEDIA QUERY */
+    @media print {
+      .print-bar { display: none !important; }
+      body { background: #fff !important; padding: 0 !important; }
+      .sheet-wrapper { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      .case-sheet { border: none !important; box-shadow: none !important; padding: 20px !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PRINT / EXPORT CONTROL BAR -->
+  <header class="print-bar">
+    <div class="print-bar-left">
+      <a href="dashboard.html" title="Return to Doctor Dashboard">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        <span>Back to Dashboard</span>
+      </a>
+      <div class="patient-picker">
+        <span>Select Patient:</span>
+        <select id="case-patient-select" onchange="loadPatientCase(this.value)">
+          <option value="A-1042" selected>Meena Kumari · A-1042 (Cardio/Chest Pain)</option>
+          <option value="A-1043">Rahul Verma · A-1043 (Diabetes/Neuropathy)</option>
+          <option value="A-1044">Sunita Devi · A-1044 (Asthma/Dyspnea)</option>
+          <option value="A-1045">Ramesh Patel · A-1045 (Knee Osteoarthritis)</option>
+        </select>
+      </div>
+    </div>
+    <div class="print-actions">
+      <button class="btn-action btn-share" onclick="copyShareLink()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>Share via SMS/ABHA</span>
+      </button>
+      <button class="btn-action btn-share" onclick="pushToAbhaLocker()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>Push to ABDM Locker</span>
+      </button>
+      <button class="btn-action btn-print" onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        <span>Print Case Sheet (Ctrl+P)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- CASE SHEET CONTAINER -->
+  <div class="sheet-wrapper">
+    <article class="case-sheet" id="case-sheet-print-root">
+      <div class="sheet-watermark">MediKiosk EMR</div>
+
+      <!-- HEADER -->
+      <header class="sheet-header">
+        <div class="hospital-identity">
+          <div class="hospital-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
+          </div>
+          <div>
+            <h1 class="hospital-name">All India Institute of Medical Sciences</h1>
+            <div class="hospital-dept">Department of Medicine &amp; Integrative AYUSH Center · New Delhi</div>
+            <div class="hospital-meta">Ansari Nagar, New Delhi 110029 · NABH Accredited · ABDM Integrated Facility</div>
+          </div>
+        </div>
+        <div class="sheet-badge-col">
+          <span class="doc-type-pill">OPD CASE SHEET</span>
+          <div class="sheet-barcode" id="cs-number">CS-2024-0618-A1042</div>
+          <div class="qr-box" title="Scan to verify ABDM record">
+            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+            <span>ABDM QR</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- PATIENT DEMOGRAPHICS -->
+      <section class="demo-box" id="patient-demo-box">
+        <div class="demo-item">
+          <label>Patient Name</label>
+          <value id="p-name">Meena Kumari</value>
+        </div>
+        <div class="demo-item">
+          <label>Age / Gender</label>
+          <value id="p-age-sex">54 Y / Female</value>
+        </div>
+        <div class="demo-item">
+          <label>UHID / OPD Token</label>
+          <value class="mono" id="p-token">UHID-98214 · Token #12</value>
+        </div>
+        <div class="demo-item">
+          <label>ABHA ID (National Health ID)</label>
+          <value class="mono badge-abha" id="p-abha">91-4432-8871-0024</value>
+        </div>
+        <div class="demo-item">
+          <label>Consulting Physician</label>
+          <value>Dr. Priya Sharma, MD</value>
+        </div>
+        <div class="demo-item">
+          <label>Consultation Date</label>
+          <value id="p-date">18 Jun 2024 · 10:15 AM</value>
+        </div>
+        <div class="demo-item">
+          <label>Blood Group &amp; BMI</label>
+          <value id="p-vitals-meta">B+ve · BMI 26.3 kg/m²</value>
+        </div>
+        <div class="demo-item">
+          <label>Emergency Contact</label>
+          <value id="p-contact">Suresh Kumar (Son) · 98765-43211</value>
+        </div>
+      </section>
+
+      <!-- VITALS SUMMARY -->
+      <section class="sheet-section">
+        <div class="sheet-section-title">
+          <span>1. Baseline Clinical Vitals</span>
+          <span class="sheet-section-tag">Recorded via Kiosk Telemetry</span>
+        </div>
+        <div class="vitals-summary-strip" id="vitals-strip">
+          <div class="vital-cell warn">
+            <div class="vital-cell-label">Blood Pressure</div>
+            <div class="vital-cell-val" id="v-bp">148/92 mmHg</div>
+            <div class="vital-cell-ref">High (Stage 1 HTN)</div>
+          </div>
+          <div class="vital-cell">
+            <div class="vital-cell-label">Pulse Rate</div>
+            <div class="vital-cell-val" id="v-pulse">88 bpm</div>
+            <div class="vital-cell-ref">Normal sinus rhythm</div>
+          </div>
+          <div class="vital-cell">
+            <div class="vital-cell-label">Oxygen Sat (SpO2)</div>
+            <div class="vital-cell-val" id="v-spo2">97%</div>
+            <div class="vital-cell-ref">Room air (Normal)</div>
+          </div>
+          <div class="vital-cell">
+            <div class="vital-cell-label">Body Temp</div>
+            <div class="vital-cell-val" id="v-temp">98.4 °F</div>
+            <div class="vital-cell-ref">Afebrile</div>
+          </div>
+          <div class="vital-cell">
+            <div class="vital-cell-label">Resp Rate</div>
+            <div class="vital-cell-val" id="v-resp">19 /min</div>
+            <div class="vital-cell-ref">Eupneic</div>
+          </div>
+          <div class="vital-cell warn">
+            <div class="vital-cell-label">Random Sugar</div>
+            <div class="vital-cell-val" id="v-rbs">164 mg/dL</div>
+            <div class="vital-cell-ref">Elevated (Postprandial)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHIEF COMPLAINTS & HISTORY OF PRESENT ILLNESS -->
+      <section class="sheet-section">
+        <div class="sheet-section-title">
+          <span>2. Chief Complaints &amp; History of Present Illness (HPI)</span>
+          <span class="sheet-section-tag">Patient Voice + Verified AI Synthesis</span>
+        </div>
+        <div class="narrative-box">
+          <div class="narrative-source">Patient's Native Voice Transcript (Hindi &rarr; Standardized English EMR):</div>
+          <p id="hpi-text">
+            Patient presents with complaints of <strong>retrosternal heaviness and discomfort</strong> on moderate exertion (climbing 1 flight of stairs) for the past 2.5 months, with noticeable aggravation over the last 4 days. Relieved within 5-10 minutes of complete rest. Associated with mild exertion-induced breathlessness and occasional night-time diaphoresis. No radiation to left jaw or left upper extremity noted today. Denies syncope, fever, hemoptysis, or sudden palpitation.
+          </p>
+        </div>
+      </section>
+
+      <!-- PAST MEDICAL & ALLERGIC HISTORY -->
+      <section class="sheet-section">
+        <div class="sheet-section-title">
+          <span>3. Medical, Surgical &amp; Allergy Profile</span>
+        </div>
+        <div class="demo-box" style="margin-bottom: 0; grid-template-columns: 1fr 1fr 1fr;">
+          <div class="demo-item">
+            <label>Known Chronic Illnesses</label>
+            <value id="p-chronic">Type-2 Diabetes Mellitus (8 yrs), Essential HTN (5 yrs)</value>
+          </div>
+          <div class="demo-item">
+            <label>Past Surgical History</label>
+            <value id="p-surgical">Cholecystectomy (2018) — uneventful recovery</value>
+          </div>
+          <div class="demo-item">
+            <label>Drug &amp; Food Allergies</label>
+            <value style="color: var(--red);" id="p-allergies">&bull; Penicillin (Severe cutaneous urticaria)</value>
+          </div>
+        </div>
+      </section>
+
+      <!-- DUAL-TRACK ASSESSMENT: ALLOPATHIC & AYUSH -->
+      <section class="sheet-section">
+        <div class="sheet-section-title">
+          <span>4. Dual-Track Clinical Assessment &amp; Diagnosis</span>
+          <span class="sheet-section-tag">Ayushman Bharat NAMASTE / ICD-10 Integration</span>
+        </div>
+        <div class="diag-grid">
+          <!-- Allopathic Diagnosis -->
+          <div class="diag-col">
+            <div class="diag-header">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              <span>Allopathic Evaluation (ICD-10)</span>
+            </div>
+            <div id="allopathic-diag-list">
+              <div class="diag-item">
+                <span class="diag-code">I20.8</span>
+                <span class="diag-name">Angina pectoris on moderate exertion (NYHA Class II)</span>
+              </div>
+              <div class="diag-item">
+                <span class="diag-code">I10</span>
+                <span class="diag-name">Essential (primary) hypertension — suboptimally controlled</span>
+              </div>
+              <div class="diag-item">
+                <span class="diag-code">E11.9</span>
+                <span class="diag-name">Type 2 Diabetes Mellitus without acute complications</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- AYUSH Evaluation -->
+          <div class="diag-col ayush">
+            <div class="diag-header" style="color: #92400e;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span>AYUSH Integrative Framework (Ayurveda)</span>
+            </div>
+            <div id="ayush-diag-list">
+              <div class="diag-item">
+                <span class="diag-code" style="background:#fde68a;">PRAKRITI</span>
+                <span class="diag-name">Vata-Pitta dominant constitution with Kapha avarana</span>
+              </div>
+              <div class="diag-item">
+                <span class="diag-code" style="background:#fde68a;">VIKRITI</span>
+                <span class="diag-name">Hridroga (Vata-Kaphaja dushti, Medovaha Sroto-rodha)</span>
+              </div>
+              <div class="diag-item">
+                <span class="diag-code" style="background:#fde68a;">AGNI</span>
+                <span class="diag-name">Vishamagni with Ama lakshana (digestive stagnation)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRESCRIPTION & PHARMACOTHERAPY -->
+      <section class="sheet-section">
+        <div class="sheet-section-title">
+          <span>5. Electronic Prescriptions &amp; Treatment Plan</span>
+          <span class="sheet-section-tag">Digitally Signed by Medical Officer</span>
+        </div>
+        <table class="rx-table" id="rx-table-body">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Medication Name &amp; Strength</th>
+              <th>Dosage &amp; Route</th>
+              <th>Timing &amp; Frequency</th>
+              <th>Duration</th>
+              <th>Special Instructions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><span class="rx-name">Tab. Aspirin (Ecosprin)</span> <span class="rx-dose">75 mg</span></td>
+              <td>1 Tablet, Oral</td>
+              <td><span class="rx-timing">0 - 1 - 0</span> Post-lunch</td>
+              <td>30 Days</td>
+              <td>Take with water after main meal</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><span class="rx-name">Tab. Atorvastatin (Atorva)</span> <span class="rx-dose">20 mg</span></td>
+              <td>1 Tablet, Oral</td>
+              <td><span class="rx-timing">0 - 0 - 1</span> At bedtime</td>
+              <td>30 Days</td>
+              <td>Nightly lipid stabilization</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><span class="rx-name">Tab. Telmisartan</span> <span class="rx-dose">40 mg</span></td>
+              <td>1 Tablet, Oral</td>
+              <td><span class="rx-timing">1 - 0 - 0</span> Morning</td>
+              <td>30 Days</td>
+              <td>Monitor morning BP weekly</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><span class="rx-name">Tab. Metformin SR</span> <span class="rx-dose">500 mg</span></td>
+              <td>1 Tablet, Oral</td>
+              <td><span class="rx-timing">1 - 0 - 1</span> With meals</td>
+              <td>30 Days</td>
+              <td>Glycemic control</td>
+            </tr>
+            <tr style="background:#fffbeb;">
+              <td>5</td>
+              <td><span class="rx-name">Arjuna Ksheerapaka / Kwath</span> <span class="rx-dose">15 ml</span></td>
+              <td>Liquid with lukewarm water</td>
+              <td><span class="rx-timing" style="background:#fef3c7;color:#92400e;">1 - 0 - 1</span> Before food</td>
+              <td>30 Days</td>
+              <td>Cardioprotective Rasayana</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- INVESTIGATIONS & FOLLOW-UP -->
+      <section class="sheet-section">
+        <div class="sheet-section-title">
+          <span>6. Ordered Investigations &amp; Follow-up Protocol</span>
+        </div>
+        <div class="demo-box" style="margin-bottom: 0; grid-template-columns: 2fr 1fr;">
+          <div class="demo-item">
+            <label>Laboratory &amp; Imaging Investigations Ordered</label>
+            <value id="p-investigations">
+              &bull; 12-Lead Resting ECG (Immediate/Stat)<br>
+              &bull; 2D Echocardiography with Doppler (Cardiology Lab, Room 104)<br>
+              &bull; Fasting Blood Sugar, HbA1c, Complete Lipid Profile, Serum Creatinine
+            </value>
+          </div>
+          <div class="demo-item">
+            <label>Next Review Date &amp; Red Flags</label>
+            <value id="p-followup" style="color: var(--teal-dark);">
+              <strong>Tuesday, 25 June 2024 (7 Days)</strong><br>
+              <span style="color:var(--red); font-size:11px;">⚠️ Red Flag: Report to ER immediately if acute radiating retrosternal pain, excessive cold sweating, or shortness of breath at rest occurs.</span>
+            </value>
+          </div>
+        </div>
+      </section>
+
+      <!-- SIGNATURE AND LEGAL FOOTER -->
+      <footer class="sheet-footer">
+        <div class="footer-left">
+          <strong>ABDM Health Document Type:</strong> OPD Clinical Consultation Summary (FHIR R4 DiagnosticReport)<br>
+          <strong>Document Hash:</strong> SHA256-8a7e3b1c90f23d44e556b<br>
+          Generated through MediKiosk AI Clinical Intake &bull; DPDP Act 2023 &amp; DISHA Compliant Record
+        </div>
+        <div class="signature-block">
+          <div class="doc-sig-mark">Priya Sharma</div>
+          <div class="doc-name">Dr. Priya Sharma, MD (Medicine)</div>
+          <div class="doc-reg">Reg No: DMC / 2012 / 48192 &bull; AIIMS New Delhi</div>
+          <div class="verification-seal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+            <span>ABDM Digitally Verified Handoff</span>
+          </div>
+        </div>
+      </footer>
+    </article>
+  </div>
+
+  <script>
+    // PATIENT DATA STORE FOR CASE SHEET GENERATION
+    const patientCases = {
+      "A-1042": {
+        name: "Meena Kumari",
+        ageSex: "54 Y / Female",
+        token: "UHID-98214 · Token #12",
+        abha: "91-4432-8871-0024",
+        vitalsMeta: "B+ve · BMI 26.3 kg/m²",
+        contact: "Suresh Kumar (Son) · 98765-43211",
+        bp: "148/92 mmHg",
+        pulse: "88 bpm",
+        spo2: "97%",
+        temp: "98.4 °F",
+        resp: "19 /min",
+        rbs: "164 mg/dL",
+        hpi: "Patient presents with complaints of <strong>retrosternal heaviness and discomfort</strong> on moderate exertion (climbing 1 flight of stairs) for the past 2.5 months, with noticeable aggravation over the last 4 days. Relieved within 5-10 minutes of complete rest. Associated with mild exertion-induced breathlessness and occasional night-time diaphoresis. No radiation to left jaw or left upper extremity noted today. Denies syncope, fever, hemoptysis, or sudden palpitation.",
+        chronic: "Type-2 Diabetes Mellitus (8 yrs), Essential HTN (5 yrs)",
+        surgical: "Cholecystectomy (2018) — uneventful recovery",
+        allergies: "• Penicillin (Severe cutaneous urticaria)",
+        allopathic: [
+          { code: "I20.8", desc: "Angina pectoris on moderate exertion (NYHA Class II)" },
+          { code: "I10", desc: "Essential (primary) hypertension — suboptimally controlled" },
+          { code: "E11.9", desc: "Type 2 Diabetes Mellitus without acute complications" }
+        ],
+        ayush: [
+          { code: "PRAKRITI", desc: "Vata-Pitta dominant constitution with Kapha avarana" },
+          { code: "VIKRITI", desc: "Hridroga (Vata-Kaphaja dushti, Medovaha Sroto-rodha)" },
+          { code: "AGNI", desc: "Vishamagni with Ama lakshana (digestive stagnation)" }
+        ]
+      },
+      "A-1043": {
+        name: "Rahul Verma",
+        ageSex: "48 Y / Male",
+        token: "UHID-87231 · Token #14",
+        abha: "91-3312-9901-4421",
+        vitalsMeta: "O+ve · BMI 28.1 kg/m²",
+        contact: "Pooja Verma (Wife) · 98112-23344",
+        bp: "132/84 mmHg",
+        pulse: "76 bpm",
+        spo2: "98%",
+        temp: "98.2 °F",
+        resp: "16 /min",
+        rbs: "210 mg/dL",
+        hpi: "Patient presents with complaints of <strong>progressive bilateral lower extremity burning sensation and tingling numbness</strong> in a classic stocking distribution for 4 months. Also reports persistent fatigue and polyuria. History of poor compliance with oral hypoglycemic agents.",
+        chronic: "Type-2 Diabetes Mellitus (6 yrs), Dyslipidemia (3 yrs)",
+        surgical: "None reported",
+        allergies: "No known drug allergies (NKDA)",
+        allopathic: [
+          { code: "E11.40", desc: "Type 2 diabetes mellitus with diabetic neuropathy" },
+          { code: "E78.5", desc: "Hyperlipidemia, unspecified" }
+        ],
+        ayush: [
+          { code: "PRAKRITI", desc: "Kapha-Pitta constitution" },
+          { code: "VIKRITI", desc: "Madhumeha with Pada-daha (Vata-Pitta avaran)" },
+          { code: "AGNI", desc: "Mandagni with Kleda vriddhi" }
+        ]
+      },
+      "A-1044": {
+        name: "Sunita Devi",
+        ageSex: "62 Y / Female",
+        token: "UHID-65129 · Token #15",
+        abha: "91-1123-7744-8890",
+        vitalsMeta: "A+ve · BMI 23.4 kg/m²",
+        contact: "Anil Devi (Son) · 98234-55667",
+        bp: "118/76 mmHg",
+        pulse: "104 bpm",
+        spo2: "91%",
+        temp: "99.1 °F",
+        resp: "26 /min",
+        rbs: "128 mg/dL",
+        hpi: "Patient arrived with <strong>acute onset dyspnea and bilateral audible wheezing</strong> precipitated by seasonal pollen exposure 2 days ago. Using Salbutamol inhaler with minimal relief. Speaks in broken sentences. SpO2 91% on room air requiring immediate supplemental O2 therapy.",
+        chronic: "Bronchial Asthma (14 yrs), Chronic Allergic Rhinitis",
+        surgical: "Appendectomy (1998)",
+        allergies: "• Sulfa drugs (Erythema multiforme), Aspirin (Bronchospasm)",
+        allopathic: [
+          { code: "J45.901", desc: "Unspecified asthma with (acute) exacerbation" },
+          { code: "J96.00", desc: "Acute respiratory failure, unspecified" }
+        ],
+        ayush: [
+          { code: "PRAKRITI", desc: "Vata-Kapha constitution" },
+          { code: "VIKRITI", desc: "Tamaka Shwasa (Pranavaha srotas dushti with Kapha vega)" },
+          { code: "AGNI", desc: "Tikshnagni with Pitta-Vata udrek" }
+        ]
+      },
+      "A-1045": {
+        name: "Ramesh Patel",
+        ageSex: "67 Y / Male",
+        token: "UHID-76492 · Token #18",
+        abha: "91-5544-2211-9988",
+        vitalsMeta: "AB+ve · BMI 27.5 kg/m²",
+        contact: "Geeta Patel (Daughter) · 98991-00223",
+        bp: "126/80 mmHg",
+        pulse: "72 bpm",
+        spo2: "99%",
+        temp: "98.0 °F",
+        resp: "15 /min",
+        rbs: "114 mg/dL",
+        hpi: "Patient reports <strong>bilateral knee pain, stiffness (worse in morning, lasting 20 mins)</strong> and audible crepitus on stair ambulation for 9 months. Difficulty in squatting and long-distance walking. Responding partially to topical analgesics.",
+        chronic: "Primary Osteoarthritis bilateral knees, Mild BPH",
+        surgical: "Cataract surgery OD (2021)",
+        allergies: "No known drug allergies (NKDA)",
+        allopathic: [
+          { code: "M17.0", desc: "Bilateral primary osteoarthritis of knee" }
+        ],
+        ayush: [
+          { code: "PRAKRITI", desc: "Vata dominant constitution" },
+          { code: "VIKRITI", desc: "Janu Sandhigata Vata (Asthi-Majja vaha srotas)" },
+          { code: "AGNI", desc: "Samagni" }
+        ]
+      }
+    };
+
+    function loadPatientCase(patientId) {
+      const p = patientCases[patientId];
+      if (!p) return;
+
+      document.getElementById('cs-number').textContent = `CS-2024-0618-${patientId}`;
+      document.getElementById('p-name').textContent = p.name;
+      document.getElementById('p-age-sex').textContent = p.ageSex;
+      document.getElementById('p-token').textContent = p.token;
+      document.getElementById('p-abha').textContent = p.abha;
+      document.getElementById('p-vitals-meta').textContent = p.vitalsMeta;
+      document.getElementById('p-contact').textContent = p.contact;
+
+      document.getElementById('v-bp').textContent = p.bp;
+      document.getElementById('v-pulse').textContent = p.pulse;
+      document.getElementById('v-spo2').textContent = p.spo2;
+      document.getElementById('v-temp').textContent = p.temp;
+      document.getElementById('v-resp').textContent = p.resp;
+      document.getElementById('v-rbs').textContent = p.rbs;
+
+      document.getElementById('hpi-text').innerHTML = p.hpi;
+      document.getElementById('p-chronic').textContent = p.chronic;
+      document.getElementById('p-surgical').textContent = p.surgical;
+      document.getElementById('p-allergies').textContent = p.allergies;
+
+      // Render Allopathic Diag
+      const alloContainer = document.getElementById('allopathic-diag-list');
+      alloContainer.innerHTML = p.allopathic.map(d => `
+        <div class="diag-item">
+          <span class="diag-code">${d.code}</span>
+          <span class="diag-name">${d.desc}</span>
+        </div>
+      `).join('');
+
+      // Render AYUSH Diag
+      const ayushContainer = document.getElementById('ayush-diag-list');
+      ayushContainer.innerHTML = p.ayush.map(d => `
+        <div class="diag-item">
+          <span class="diag-code" style="background:#fde68a;">${d.code}</span>
+          <span class="diag-name">${d.desc}</span>
+        </div>
+      `).join('');
+    }
+
+    function copyShareLink() {
+      navigator.clipboard?.writeText(window.location.href);
+      alert("✓ Secure ABHA Patient Portal Link copied to clipboard! Sent via SMS to patient.");
+    }
+
+    function pushToAbhaLocker() {
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "<span>Syncing ABDM...</span>";
+      setTimeout(() => {
+        btn.innerHTML = "<span>✓ Synced to ABDM Locker</span>";
+        btn.style.background = "#059669";
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = "";
+        }, 3000);
+      }, 900);
+    }
+  </script>
+</body>
+</html>

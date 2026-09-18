@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediKiosk — Patient Intake & Case-Taking</title>
+  <meta name="description" content="MediKiosk guided patient intake — multilingual, AI-powered case-taking for OPD consultations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    body { background: #f0f9f7; }
+    .intake-shell { display: flex; min-height: 100vh; }
+    .intake-sidebar { width: 280px; background: var(--paper); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 28px 20px; position: sticky; top: 0; height: 100vh; flex-shrink: 0; overflow-y: auto; }
+    .intake-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; text-decoration: none; color: inherit; }
+    .intake-brand .brand-mark { width: 38px; height: 38px; background: var(--teal); color: #fff; border-radius: 10px; display: grid; place-items: center; box-shadow: 0 5px 14px rgba(13,148,136,0.28); flex-shrink: 0; }
+    .intake-brand strong { font: 700 18px var(--font-heading); color: var(--ink); display: block; line-height: 1.1; }
+    .intake-brand span { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.1px; font-weight: 600; }
+    .step-list { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .step-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; cursor: default; transition: background 0.2s; border: 1px solid transparent; }
+    .step-item.active { background: var(--teal-light); border-color: #ccede9; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font: 600 11px var(--font-heading); color: var(--muted); flex-shrink: 0; transition: all 0.25s; }
+    .step-item.active .step-num { background: var(--teal); border-color: var(--teal); color: #fff; }
+    .step-item.done .step-num { background: var(--green); border-color: var(--green); color: #fff; }
+    .step-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .step-item.active .step-label { color: var(--teal-dark); }
+    .step-item.done .step-label { color: var(--green); }
+    .step-sub { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+    .intake-sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--line); }
+    .kiosk-badge { display: flex; align-items: center; gap: 8px; background: var(--teal-light); border: 1px solid #ccede9; border-radius: 9px; padding: 10px 12px; }
+    .kiosk-badge svg { color: var(--teal); flex-shrink: 0; }
+    .kiosk-badge-text { font-size: 10px; line-height: 1.4; }
+    .kiosk-badge-text b { display: block; color: var(--ink); font-size: 11px; }
+    .kiosk-badge-text span { color: var(--muted); }
+    .intake-main { flex: 1; display: flex; flex-direction: column; max-width: 780px; margin: 0 auto; padding: 48px 40px; }
+    .progress-track { display: flex; align-items: center; gap: 6px; margin-bottom: 40px; }
+    .progress-seg { height: 4px; border-radius: 4px; flex: 1; background: var(--line); transition: background 0.4s; }
+    .progress-seg.fill { background: var(--teal); }
+    .step-panel { display: none; animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .step-panel.active { display: block; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .step-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--teal); margin-bottom: 8px; }
+    .step-heading { font: 700 26px var(--font-heading); color: var(--ink); letter-spacing: -0.5px; margin-bottom: 8px; line-height: 1.2; }
+    .step-desc { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+    .lang-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+    .lang-card { background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .lang-card:hover { border-color: var(--teal); background: var(--teal-light); }
+    .lang-card.selected { border-color: var(--teal); background: var(--teal-light); box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+    .lang-native { font-size: 18px; font-weight: 700; color: var(--ink); display: block; margin-bottom: 4px; }
+    .lang-english { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-label { font-size: 11px; font-weight: 700; color: var(--ink); letter-spacing: 0.3px; }
+    .form-input, .form-select { padding: 10px 13px; border: 1.5px solid var(--line); border-radius: 9px; font-family: var(--font-sans); font-size: 13px; color: var(--ink); background: var(--paper); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .form-input:focus, .form-select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+    textarea.form-input { resize: vertical; }
+    .complaint-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+    .complaint-chip { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: left; }
+    .complaint-chip:hover { border-color: var(--teal); background: var(--teal-light); }
+    .complaint-chip.selected { border-color: var(--teal); background: var(--teal-light); box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+    .complaint-icon { font-size: 22px; flex-shrink: 0; }
+    .complaint-name { font-size: 12px; font-weight: 700; color: var(--ink); }
+    .complaint-hint { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .voice-area { background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+    .voice-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .voice-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+    .voice-btn { display: flex; align-items: center; gap: 7px; background: var(--teal-light); border: 1px solid #ccede9; border-radius: 20px; padding: 6px 14px; font: 600 11px var(--font-sans); color: var(--teal-dark); cursor: pointer; transition: all 0.2s; }
+    .voice-btn:hover { background: var(--teal); color: #fff; }
+    .voice-btn.recording { background: #fef2f2; border-color: #fecaca; color: var(--red); animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .voice-textarea { width: 100%; min-height: 90px; border: none; outline: none; font-family: var(--font-sans); font-size: 13px; color: var(--ink); resize: vertical; line-height: 1.6; background: transparent; }
+    .voice-translation { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); display: none; }
+    .voice-translation.show { display: block; }
+    .qa-block { display: none; background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 14px; animation: slideIn 0.3s ease; }
+    .qa-block.show { display: block; }
+    .qa-q { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 12px; display: flex; align-items: flex-start; gap: 8px; }
+    .qa-q-icon { width: 20px; height: 20px; background: #e0f2fe; border-radius: 6px; display: grid; place-items: center; color: var(--blue); flex-shrink: 0; }
+    .qa-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    .qa-opt { padding: 7px 14px; border: 1.5px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; background: var(--paper); }
+    .qa-opt:hover { border-color: var(--teal); color: var(--teal-dark); }
+    .qa-opt.selected { background: var(--teal); border-color: var(--teal); color: #fff; }
+    .vitals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .vital-card { background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 16px; }
+    .vital-icon-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .vital-icon { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+    .vital-icon.teal { background: var(--teal-light); color: var(--teal); }
+    .vital-icon.red { background: var(--red-light); color: var(--red); }
+    .vital-icon.blue { background: #eff6ff; color: var(--blue); }
+    .vital-icon.green { background: #f0fdf4; color: var(--green); }
+    .vital-icon.yellow { background: var(--yellow-light); color: var(--yellow); }
+    .vital-icon.purple { background: #f5f3ff; color: #7c3aed; }
+    .vital-name { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+    .vital-input-row { display: flex; align-items: center; gap: 6px; }
+    .vital-field { flex: 1; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 8px; font: 600 14px var(--font-heading); color: var(--ink); outline: none; transition: border-color 0.2s; width: 0; }
+    .vital-field:focus { border-color: var(--teal); }
+    .vital-unit { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+    .ai-summary-card { background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%); border: 1.5px solid #ccede9; border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+    .ai-summary-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .ai-badge-inline { display: flex; align-items: center; gap: 6px; background: var(--teal-light); border: 1px solid #b2deda; border-radius: 20px; padding: 4px 10px; font-size: 10px; font-weight: 700; color: var(--teal-dark); text-transform: uppercase; letter-spacing: 0.6px; }
+    .summary-row { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(13,148,136,0.1); }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-key { font-size: 11px; font-weight: 700; color: var(--teal-dark); min-width: 140px; flex-shrink: 0; }
+    .summary-val { font-size: 12px; color: var(--ink); line-height: 1.5; }
+    .step-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .btn-back { display: flex; align-items: center; gap: 7px; padding: 10px 18px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 9px; font: 600 12px var(--font-sans); color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .btn-back:hover { border-color: var(--ink); color: var(--ink); }
+    .btn-next { display: flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--teal); border: none; border-radius: 9px; font: 700 13px var(--font-sans); color: #fff; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(13,148,136,0.25); text-decoration: none; }
+    .btn-next:hover { background: var(--teal-dark); transform: translateY(-1px); }
+    .btn-next:disabled, .btn-next[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-next.complete { background: var(--green); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+    .check-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .check-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .check-item:hover { border-color: var(--teal); background: var(--teal-light); }
+    .check-item.checked { border-color: var(--teal); background: var(--teal-light); }
+    .check-box { width: 18px; height: 18px; border: 2px solid var(--line); border-radius: 5px; display: grid; place-items: center; flex-shrink: 0; transition: all 0.2s; font-size: 11px; color: transparent; }
+    .check-item.checked .check-box { background: var(--teal); border-color: var(--teal); color: #fff; }
+    .check-text { font-size: 12px; font-weight: 600; color: var(--ink); }
+    .review-section { background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+    .review-section-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: #f8fafc; border-bottom: 1px solid var(--line); }
+    .review-section-title { font: 700 12px var(--font-heading); color: var(--ink); }
+    .review-section-body { padding: 14px 18px; }
+    .review-row { display: flex; gap: 12px; padding: 7px 0; border-bottom: 1px solid #f1f5f9; }
+    .review-row:last-child { border-bottom: none; }
+    .review-key { font-size: 11px; font-weight: 700; color: var(--muted); min-width: 130px; }
+    .review-val { font-size: 12px; color: var(--ink); flex: 1; }
+    .complete-center { text-align: center; padding: 40px 20px; }
+    .complete-icon { width: 72px; height: 72px; background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-radius: 50%; display: grid; place-items: center; margin: 0 auto 20px; animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+    .token-card { background: var(--teal); color: #fff; border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center; }
+    .token-label { font-size: 11px; opacity: 0.8; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+    .token-number { font: 800 48px var(--font-heading); letter-spacing: -2px; margin: 6px 0; }
+    .token-dept { font-size: 12px; opacity: 0.85; }
+    .action-btns { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+    .intake-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+    .intake-toast.show { opacity: 1; }
+    .hint-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; margin-bottom: 16px; font-size: 11px; color: #92400e; line-height: 1.5; }
+    .section-divider { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 20px 0 12px; }
+    @media (max-width: 900px) { .intake-sidebar { display: none; } .lang-grid { grid-template-columns: repeat(2,1fr); } .complaint-grid { grid-template-columns: repeat(2,1fr); } .vitals-grid { grid-template-columns: repeat(2,1fr); } .form-grid { grid-template-columns: 1fr; } .intake-main { padding: 24px 20px; } }
+  </style>
+</head>
+<body>
+
+<div class="intake-shell">
+  <!-- SIDEBAR -->
+  <aside class="intake-sidebar">
+    <a href="index.html" class="intake-brand">
+      <div class="brand-mark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
+      </div>
+      <div><strong>MediKiosk</strong><span>Patient Intake</span></div>
+    </a>
+    <a href="dashboard.html" style="display:flex; align-items:center; gap:8px; background:#f8fafc; border:1px solid var(--line); padding:7px 11px; border-radius:8px; color:var(--muted); font-size:11px; font-weight:600; text-decoration:none; margin-bottom:20px; transition:all 0.2s;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      <span>Return to Dashboard</span>
+    </a>
+    <div class="step-list" id="sidebar-steps">
+      <div class="step-item active" data-sid="0"><div class="step-num" id="sn-0">1</div><div><div class="step-label">Language</div><div class="step-sub">Select your language</div></div></div>
+      <div class="step-item" data-sid="1"><div class="step-num" id="sn-1">2</div><div><div class="step-label">Registration</div><div class="step-sub">Basic patient details</div></div></div>
+      <div class="step-item" data-sid="2"><div class="step-num" id="sn-2">3</div><div><div class="step-label">Chief Complaint</div><div class="step-sub">Symptoms &amp; onset</div></div></div>
+      <div class="step-item" data-sid="3"><div class="step-num" id="sn-3">4</div><div><div class="step-label">Medical History</div><div class="step-sub">Past illness, medications</div></div></div>
+      <div class="step-item" data-sid="4"><div class="step-num" id="sn-4">5</div><div><div class="step-label">Vitals &amp; Exam</div><div class="step-sub">BP, temperature, SpO2</div></div></div>
+      <div class="step-item" data-sid="5"><div class="step-num" id="sn-5">6</div><div><div class="step-label">Review &amp; Submit</div><div class="step-sub">Confirm case sheet</div></div></div>
+    </div>
+    <div class="intake-sidebar-footer">
+      <div class="kiosk-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+        <div class="kiosk-badge-text"><b>ABDM Secure Kiosk</b><span>Terminal 02 · AIIMS OPD Floor 2</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="intake-main">
+    <div class="progress-track" id="progress-track">
+      <div class="progress-seg fill" id="ps-0"></div>
+      <div class="progress-seg" id="ps-1"></div>
+      <div class="progress-seg" id="ps-2"></div>
+      <div class="progress-seg" id="ps-3"></div>
+      <div class="progress-seg" id="ps-4"></div>
+      <div class="progress-seg" id="ps-5"></div>
+    </div>
+
+    <!-- STEP 0: LANGUAGE -->
+    <div class="step-panel active" id="step-0">
+      <div class="step-eyebrow">Step 1 of 6 · Language / भाषा</div>
+      <h2 class="step-heading">Choose your language<br><span style="font-size:20px;color:var(--teal);">अपनी भाषा चुनें</span></h2>
+      <p class="step-desc">Select the language you're most comfortable speaking in. The kiosk will guide you in that language.</p>
+      <div class="lang-grid" id="lang-grid">
+        <div class="lang-card" data-lang="en" onclick="selectLang(this)"><span class="lang-native">A</span><span class="lang-english">English</span></div>
+        <div class="lang-card" data-lang="hi" onclick="selectLang(this)"><span class="lang-native">हि</span><span class="lang-english">Hindi</span></div>
+        <div class="lang-card" data-lang="bn" onclick="selectLang(this)"><span class="lang-native">বাং</span><span class="lang-english">Bengali</span></div>
+        <div class="lang-card" data-lang="te" onclick="selectLang(this)"><span class="lang-native">తె</span><span class="lang-english">Telugu</span></div>
+        <div class="lang-card" data-lang="mr" onclick="selectLang(this)"><span class="lang-native">म</span><span class="lang-english">Marathi</span></div>
+        <div class="lang-card" data-lang="ta" onclick="selectLang(this)"><span class="lang-native">த</span><span class="lang-english">Tamil</span></div>
+        <div class="lang-card" data-lang="gu" onclick="selectLang(this)"><span class="lang-native">ગ</span><span class="lang-english">Gujarati</span></div>
+        <div class="lang-card" data-lang="kn" onclick="selectLang(this)"><span class="lang-native">ಕ</span><span class="lang-english">Kannada</span></div>
+      </div>
+      <div class="step-nav">
+        <div></div>
+        <button class="btn-next" id="btn-lang-next" onclick="nextStep()" disabled>Continue <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <!-- STEP 1: REGISTRATION -->
+    <div class="step-panel" id="step-1">
+      <div class="step-eyebrow">Step 2 of 6 · Patient Registration</div>
+      <h2 class="step-heading">Basic patient details</h2>
+      <p class="step-desc">Please enter your details or scan your ABHA card. Fields marked * are required.</p>
+      <div class="hint-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+        <span>If you have an <strong>ABHA card</strong>, scan it to auto-fill your details. Or enter them manually below.</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-field"><label class="form-label">Full Name *</label><input type="text" class="form-input" id="reg-name" placeholder="e.g. Meena Kumari"></div>
+        <div class="form-field"><label class="form-label">ABHA ID / Aadhaar</label><input type="text" class="form-input" id="reg-abha" placeholder="XXXX-XXXX-8892"></div>
+        <div class="form-field"><label class="form-label">Age *</label><input type="number" class="form-input" id="reg-age" placeholder="e.g. 42" min="0" max="120"></div>
+        <div class="form-field"><label class="form-label">Gender *</label><select class="form-select" id="reg-gender"><option value="">Select gender</option><option>Male</option><option>Female</option><option>Other / Prefer not to say</option></select></div>
+        <div class="form-field"><label class="form-label">Mobile Number *</label><input type="tel" class="form-input" id="reg-phone" placeholder="10-digit number"></div>
+        <div class="form-field"><label class="form-label">Department</label><select class="form-select" id="reg-dept"><option value="General Medicine">General Medicine</option><option value="Ayurveda OPD">Ayurveda OPD (AYUSH)</option><option value="Pediatrics">Pediatrics</option><option value="Orthopedics">Orthopedics</option><option value="Cardiology">Cardiology</option></select></div>
+        <div class="form-field full"><label class="form-label">Address (City / District)</label><input type="text" class="form-input" id="reg-address" placeholder="e.g. Rohini, New Delhi"></div>
+      </div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="prevStep()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back</button>
+        <button class="btn-next" onclick="validateReg()">Continue <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <!-- STEP 2: CHIEF COMPLAINT -->
+    <div class="step-panel" id="step-2">
+      <div class="step-eyebrow">Step 3 of 6 · Chief Complaint</div>
+      <h2 class="step-heading">What brings you in today?</h2>
+      <p class="step-desc">Select your main concern. The AI will ask adaptive follow-up questions based on your complaint.</p>
+      <div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;">Main complaint</div>
+      <div class="complaint-grid" id="complaint-grid">
+        <div class="complaint-chip" data-complaint="chest" onclick="selectComplaint(this)"><span class="complaint-icon">🫀</span><div><div class="complaint-name">Chest Pain / Breathlessness</div><div class="complaint-hint">Chest tightness, palpitations</div></div></div>
+        <div class="complaint-chip" data-complaint="fever" onclick="selectComplaint(this)"><span class="complaint-icon">🌡️</span><div><div class="complaint-name">Fever / Infection</div><div class="complaint-hint">High temperature, chills</div></div></div>
+        <div class="complaint-chip" data-complaint="stomach" onclick="selectComplaint(this)"><span class="complaint-icon">🫃</span><div><div class="complaint-name">Stomach / Digestion</div><div class="complaint-hint">Pain, nausea, bloating</div></div></div>
+        <div class="complaint-chip" data-complaint="headache" onclick="selectComplaint(this)"><span class="complaint-icon">🧠</span><div><div class="complaint-name">Headache / Migraine</div><div class="complaint-hint">Pain, dizziness, vision changes</div></div></div>
+        <div class="complaint-chip" data-complaint="fatigue" onclick="selectComplaint(this)"><span class="complaint-icon">😴</span><div><div class="complaint-name">Fatigue / Weakness</div><div class="complaint-hint">Tiredness, low energy</div></div></div>
+        <div class="complaint-chip" data-complaint="joint" onclick="selectComplaint(this)"><span class="complaint-icon">🦴</span><div><div class="complaint-name">Joint / Bone Pain</div><div class="complaint-hint">Knee, back, arthritis</div></div></div>
+        <div class="complaint-chip" data-complaint="skin" onclick="selectComplaint(this)"><span class="complaint-icon">🩹</span><div><div class="complaint-name">Skin / Allergy</div><div class="complaint-hint">Rash, itching, swelling</div></div></div>
+        <div class="complaint-chip" data-complaint="diabetes" onclick="selectComplaint(this)"><span class="complaint-icon">💉</span><div><div class="complaint-name">Diabetes / BP Follow-up</div><div class="complaint-hint">Routine review, medication</div></div></div>
+        <div class="complaint-chip" data-complaint="other" onclick="selectComplaint(this)"><span class="complaint-icon">➕</span><div><div class="complaint-name">Other / Describe below</div><div class="complaint-hint">Anything not listed</div></div></div>
+      </div>
+      <div class="voice-area">
+        <div class="voice-header">
+          <div class="voice-label">Describe your symptoms</div>
+          <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            🎙 Speak
+          </button>
+        </div>
+        <textarea class="voice-textarea" id="complaint-text" placeholder="Type or speak your symptoms. Example: I have had chest pain for 2 hours, it started while walking..."></textarea>
+        <div class="voice-translation" id="voice-translation"><strong style="color:var(--teal);">🔄 Live translation:</strong> <span id="translation-text"></span></div>
+      </div>
+      <div id="qa-section"></div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="prevStep()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back</button>
+        <button class="btn-next" onclick="nextStep()">Continue <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <!-- STEP 3: MEDICAL HISTORY -->
+    <div class="step-panel" id="step-3">
+      <div class="step-eyebrow">Step 4 of 6 · Medical &amp; Family History</div>
+      <h2 class="step-heading">Past medical history</h2>
+      <p class="step-desc">Tell us about past illnesses, current medications, and family history to help the doctor make informed decisions.</p>
+      <div class="section-divider">Existing conditions (tick all that apply)</div>
+      <div class="check-list" id="conditions-list">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Diabetes Mellitus (Type 1 or 2)</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Hypertension (High Blood Pressure)</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Heart Disease / Cardiac issues</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Asthma / COPD / Lung Disease</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Thyroid Disorder</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Kidney Disease</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">None of the above</span></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-field full"><label class="form-label">Current medications (if any)</label><input type="text" class="form-input" id="hist-meds" placeholder="e.g. Metformin 500mg, Amlodipine 5mg"></div>
+        <div class="form-field full"><label class="form-label">Known allergies (drugs/food)</label><input type="text" class="form-input" id="hist-allergy" placeholder="e.g. Penicillin, Sulfa drugs — or NKDA"></div>
+        <div class="form-field full"><label class="form-label">Past surgeries or hospitalizations</label><input type="text" class="form-input" id="hist-surgery" placeholder="e.g. Appendectomy 2015, Hip replacement 2021"></div>
+      </div>
+      <div class="section-divider">Family history</div>
+      <div class="check-list" id="family-list">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Diabetes in parent or sibling</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Heart attack / Stroke in family</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Cancer in first-degree relative</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Hypertension in family</span></div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">No significant family history</span></div>
+      </div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="prevStep()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back</button>
+        <button class="btn-next" onclick="nextStep()">Continue <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <!-- STEP 4: VITALS -->
+    <div class="step-panel" id="step-4">
+      <div class="step-eyebrow">Step 5 of 6 · Vitals &amp; Examination</div>
+      <h2 class="step-heading">Vital signs &amp; measurements</h2>
+      <p class="step-desc">Use the kiosk sensors or enter values manually. A nurse can assist if needed. Leave blank if unavailable.</p>
+      <div class="vitals-grid">
+        <div class="vital-card">
+          <div class="vital-icon-row"><div class="vital-icon red"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="vital-name">Blood Pressure</div></div>
+          <div class="vital-input-row"><input type="number" class="vital-field" id="v-bp-sys" placeholder="120"><span class="vital-unit">/</span><input type="number" class="vital-field" id="v-bp-dia" placeholder="80"><span class="vital-unit">mmHg</span></div>
+        </div>
+        <div class="vital-card">
+          <div class="vital-icon-row"><div class="vital-icon teal"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="vital-name">Heart Rate</div></div>
+          <div class="vital-input-row"><input type="number" class="vital-field" id="v-hr" placeholder="72"><span class="vital-unit">bpm</span></div>
+        </div>
+        <div class="vital-card">
+          <div class="vital-icon-row"><div class="vital-icon yellow"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></div><div class="vital-name">Temperature</div></div>
+          <div class="vital-input-row"><input type="number" class="vital-field" id="v-temp" placeholder="98.6" step="0.1"><span class="vital-unit">°F</span></div>
+        </div>
+        <div class="vital-card">
+          <div class="vital-icon-row"><div class="vital-icon blue"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="vital-name">SpO2 (Oxygen)</div></div>
+          <div class="vital-input-row"><input type="number" class="vital-field" id="v-spo2" placeholder="98"><span class="vital-unit">%</span></div>
+        </div>
+        <div class="vital-card">
+          <div class="vital-icon-row"><div class="vital-icon green"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><div class="vital-name">Weight</div></div>
+          <div class="vital-input-row"><input type="number" class="vital-field" id="v-weight" placeholder="65"><span class="vital-unit">kg</span></div>
+        </div>
+        <div class="vital-card">
+          <div class="vital-icon-row"><div class="vital-icon purple"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="vital-name">Random Blood Sugar</div></div>
+          <div class="vital-input-row"><input type="number" class="vital-field" id="v-rbs" placeholder="110"><span class="vital-unit">mg/dL</span></div>
+        </div>
+      </div>
+      <div class="hint-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <span>Critical values (SpO2 &lt;94%, BP &gt;180) automatically trigger a <strong>priority alert</strong> to the doctor before your consultation.</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-field full"><label class="form-label">Additional notes for the doctor (optional)</label><textarea class="form-input" id="v-notes" rows="3" placeholder="Any other symptoms or concerns..."></textarea></div>
+      </div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="prevStep()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back</button>
+        <button class="btn-next" onclick="buildReview()">Review &amp; Submit <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <!-- STEP 5: REVIEW -->
+    <div class="step-panel" id="step-5">
+      <div class="step-eyebrow">Step 6 of 6 · Review &amp; Submit</div>
+      <h2 class="step-heading">Review your case sheet</h2>
+      <p class="step-desc">Confirm your information below before sending to your doctor.</p>
+      <div class="ai-summary-card">
+        <div class="ai-summary-header">
+          <div class="ai-badge-inline">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+            AI-structured summary
+          </div>
+          <span style="font-size:10px;color:var(--muted);">Review before submission</span>
+        </div>
+        <div id="ai-summary-content"></div>
+      </div>
+      <div id="review-sections"></div>
+      <div class="hint-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>By tapping <strong>Confirm &amp; Submit</strong>, you consent to sharing this case with your assigned physician. DPDP &amp; ABDM compliant.</span>
+      </div>
+      <div class="step-nav">
+        <button class="btn-back" onclick="prevStep()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back</button>
+        <button class="btn-next complete" onclick="submitCase()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> Confirm &amp; Submit</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: COMPLETE -->
+    <div class="step-panel" id="step-6">
+      <div class="complete-center">
+        <div class="complete-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h2 class="step-heading" style="margin-bottom:8px;">You're all set! 🎉</h2>
+        <p class="step-desc" style="margin-bottom:0;">Your case has been securely sent to your doctor. Please collect your token and wait in the OPD area.</p>
+        <div class="token-card">
+          <div class="token-label">Your Queue Token</div>
+          <div class="token-number" id="token-display">A-1049</div>
+          <div class="token-dept" id="token-dept-display">General Medicine · Floor 2 · OPD Room 3</div>
+        </div>
+        <div style="background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:20px;text-align:left;margin-bottom:20px;">
+          <div style="font:700 13px var(--font-heading);color:var(--ink);margin-bottom:12px;">What happens next?</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;"><div style="width:22px;height:22px;background:var(--teal-light);border-radius:50%;display:grid;place-items:center;flex-shrink:0;"><span style="font-size:10px;font-weight:800;color:var(--teal);">1</span></div><div style="font-size:12px;color:var(--ink);">Your token number will appear on the OPD display board when it's your turn</div></div>
+            <div style="display:flex;gap:10px;align-items:flex-start;"><div style="width:22px;height:22px;background:var(--teal-light);border-radius:50%;display:grid;place-items:center;flex-shrink:0;"><span style="font-size:10px;font-weight:800;color:var(--teal);">2</span></div><div style="font-size:12px;color:var(--ink);">Dr. Priya Sharma will have already reviewed your case summary</div></div>
+            <div style="display:flex;gap:10px;align-items:flex-start;"><div style="width:22px;height:22px;background:var(--teal-light);border-radius:50%;display:grid;place-items:center;flex-shrink:0;"><span style="font-size:10px;font-weight:800;color:var(--teal);">3</span></div><div style="font-size:12px;color:var(--ink);">Estimated wait: <strong>12–18 minutes</strong> based on current queue</div></div>
+          </div>
+        </div>
+        <div class="action-btns">
+          <a href="dashboard.html" class="btn-next"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg> Doctor Dashboard</a>
+          <a href="casesheet.html" class="btn-back" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg> View Case Sheet</a>
+          <button class="btn-back" onclick="resetIntake()">New Patient</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="intake-toast" id="intake-toast">
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+  <span id="toast-msg">Done</span>
+</div>
+
+<script>
+  let currentStep = 0;
+  const totalSteps = 6;
+  let selectedLang = null;
+  let selectedComplaint = null;
+  let voiceActive = false;
+  let voiceTimer = null;
+  const langNames = { en:'English', hi:'Hindi', bn:'Bengali', te:'Telugu', mr:'Marathi', ta:'Tamil', gu:'Gujarati', kn:'Kannada' };
+
+  const complaintQuestions = {
+    chest: [
+      { q: "Where exactly is the pain?", opts: ["Center of chest","Left side","Right side","Radiates to arm/jaw","Whole chest"] },
+      { q: "How would you describe the pain?", opts: ["Pressure / Heaviness","Sharp / Stabbing","Burning","Tightness","Dull ache"] },
+      { q: "Any other symptoms present?", opts: ["Sweating","Nausea","Breathlessness","Palpitations","Dizziness"] }
+    ],
+    fever: [
+      { q: "How long have you had the fever?", opts: ["1 day","2–3 days","4–7 days","More than a week"] },
+      { q: "Any associated symptoms?", opts: ["Cough","Sore throat","Body aches","Headache","Chills/Rigors"] },
+      { q: "Have you measured your temperature?", opts: ["Yes, above 101°F","Yes, 100–101°F","No, just feel hot"] }
+    ],
+    stomach: [
+      { q: "What type of stomach problem?", opts: ["Abdominal pain","Bloating / Gas","Nausea / Vomiting","Diarrhea","Constipation","Acidity"] },
+      { q: "When does it typically occur?", opts: ["After eating","Before meals","At night","All the time"] },
+      { q: "Severity of pain:", opts: ["Mild — tolerable","Moderate","Severe — can't do activities"] }
+    ],
+    headache: [
+      { q: "Where is the headache located?", opts: ["Forehead","One side (left/right)","Back of head","Whole head","Behind eyes"] },
+      { q: "Type of headache:", opts: ["Throbbing / Pulsating","Pressure","Sharp / Stabbing","Constant dull ache"] },
+      { q: "Other symptoms with headache?", opts: ["Nausea","Sensitivity to light","Sensitivity to sound","Visual disturbances","Neck stiffness"] }
+    ],
+    fatigue: [
+      { q: "How long have you been fatigued?", opts: ["Less than a week","1–3 weeks","1–3 months","More than 3 months"] },
+      { q: "Impact on daily activities?", opts: ["Mildly","Moderately","Severely — can't work"] },
+      { q: "Associated symptoms?", opts: ["Weight loss","Poor appetite","Hair fall","Paleness","Evening headache"] }
+    ],
+    joint: [
+      { q: "Which joints are affected?", opts: ["Knee","Hip","Lower back","Shoulder","Hands / Fingers","Ankle"] },
+      { q: "How does the pain behave?", opts: ["Worse in morning (stiffness)","Worse after activity","Constant","Comes and goes"] },
+      { q: "Any swelling or redness?", opts: ["Yes, with swelling","Yes, with redness","Both swelling & redness","No swelling"] }
+    ],
+    skin: [
+      { q: "Type of skin problem?", opts: ["Rash / Red spots","Itching (no rash)","Swelling / Hives","Dry/Flaking skin","Blisters"] },
+      { q: "Where is it located?", opts: ["Face","Arms","Legs","Chest/Back","Whole body"] },
+      { q: "Possible trigger?", opts: ["New food / medicine","Soap / Detergent","Plant / Animal contact","Unknown"] }
+    ],
+    diabetes: [
+      { q: "What are you following up for?", opts: ["HbA1c / Blood sugar review","BP monitoring","Medication change","New symptoms","Routine check-up"] },
+      { q: "Taking medications regularly?", opts: ["Yes, as prescribed","Sometimes missing doses","No, stopped taking"] },
+      { q: "Any new symptoms?", opts: ["Blurred vision","Increased thirst","Foot numbness","Chest pain","None"] }
+    ],
+    other: [
+      { q: "How long have you had this problem?", opts: ["1–3 days","1–2 weeks","1–3 months","Longer than 3 months"] },
+      { q: "Impact on daily life?", opts: ["Mild","Moderate","Severe"] }
+    ]
+  };
+  const answers = {};
+
+  function nextStep() { if (currentStep < totalSteps) goToStep(currentStep + 1); }
+  function prevStep() { if (currentStep > 0) goToStep(currentStep - 1); }
+  function goToStep(step) {
+    document.getElementById('step-' + currentStep).classList.remove('active');
+    currentStep = step;
+    document.getElementById('step-' + currentStep).classList.add('active');
+    updateProgress(); updateSidebar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function updateProgress() {
+    for (let i = 0; i < totalSteps; i++) {
+      const seg = document.getElementById('ps-' + i);
+      if (seg) seg.classList.toggle('fill', i <= currentStep);
+    }
+  }
+  function updateSidebar() {
+    for (let i = 0; i < totalSteps; i++) {
+      const item = document.querySelector('[data-sid="' + i + '"]');
+      const num = document.getElementById('sn-' + i);
+      if (!item) continue;
+      item.classList.remove('active','done');
+      if (i < currentStep) { item.classList.add('done'); if (num) num.textContent = '✓'; }
+      else if (i === currentStep) { item.classList.add('active'); if (num) num.textContent = (i+1); }
+      else { if (num) num.textContent = (i+1); }
+    }
+  }
+  function selectLang(card) {
+    document.querySelectorAll('.lang-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedLang = card.dataset.lang;
+    const btn = document.getElementById('btn-lang-next');
+    btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+    showToast('Language set to ' + langNames[selectedLang]);
+  }
+  function validateReg() {
+    const name = document.getElementById('reg-name').value.trim();
+    const age = document.getElementById('reg-age').value;
+    const gender = document.getElementById('reg-gender').value;
+    const phone = document.getElementById('reg-phone').value.trim();
+    if (!name || !age || !gender || !phone) { showToast('Please fill all required fields (*)'); return; }
+    nextStep();
+  }
+  function selectComplaint(chip) {
+    document.querySelectorAll('.complaint-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    selectedComplaint = chip.dataset.complaint;
+    renderQA(selectedComplaint);
+  }
+  function renderQA(complaint) {
+    const qs = complaintQuestions[complaint] || [];
+    const container = document.getElementById('qa-section');
+    container.innerHTML = qs.map((q, qi) => `
+      <div class="qa-block show">
+        <div class="qa-q">
+          <div class="qa-q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
+          ${q.q}
+        </div>
+        <div class="qa-options" id="qa-opts-${complaint}-${qi}">
+          ${q.opts.map(opt => `<div class="qa-opt" onclick="selectOpt(this,'${complaint}-${qi}')">${opt}</div>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+  function selectOpt(el, key) {
+    const group = document.getElementById('qa-opts-' + key);
+    group.querySelectorAll('.qa-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    answers[key] = el.textContent;
+  }
+  const voiceSamples = {
+    hi:"मुझे 3 हफ्ते से बहुत थकान लग रही है और शाम को सिरदर्द होता है...",
+    mr:"माझ्या छातीत खूप जड वाटत आहे आणि श्वास घेणे कठीण होत आहे...",
+    kn:"ನನಗೆ 3 ವಾರಗಳಿಂದ ತಲೆನೋವು ಮತ್ತು ತೀವ್ರ ಆಯಾಸ ಆಗುತ್ತಿದೆ...",
+    default:"I have been having chest pain and breathlessness for 2 hours, started while walking..."
+  };
+  const voiceTranslations = {
+    hi:"I have been experiencing severe fatigue for 3 weeks and headaches in the evenings...",
+    mr:"I feel heavy in my chest and am having difficulty breathing...",
+    kn:"I have been having headaches and severe fatigue for 3 weeks...",
+    default:""
+  };
+  function toggleVoice() {
+    const btn = document.getElementById('voice-btn');
+    const textarea = document.getElementById('complaint-text');
+    const transl = document.getElementById('voice-translation');
+    if (!voiceActive) {
+      voiceActive = true;
+      btn.className = 'voice-btn recording';
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop`;
+      const sample = voiceSamples[selectedLang] || voiceSamples.default;
+      textarea.value = ''; let i = 0;
+      voiceTimer = setInterval(() => {
+        textarea.value = sample.slice(0, ++i);
+        if (i >= sample.length) {
+          clearInterval(voiceTimer);
+          if (selectedLang && selectedLang !== 'en') {
+            transl.classList.add('show');
+            document.getElementById('translation-text').textContent = voiceTranslations[selectedLang] || voiceTranslations.default;
+          }
+          toggleVoice();
+        }
+      }, 40);
+    } else {
+      voiceActive = false; clearInterval(voiceTimer);
+      btn.className = 'voice-btn';
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg> 🎙 Speak`;
+    }
+  }
+  function toggleCheck(item) { item.classList.toggle('checked'); }
+  function buildReview() {
+    const name = document.getElementById('reg-name').value || 'Not provided';
+    const age = document.getElementById('reg-age').value || '—';
+    const gender = document.getElementById('reg-gender').value || '—';
+    const dept = document.getElementById('reg-dept').value || 'General Medicine';
+    const lang = langNames[selectedLang] || 'English';
+    const complaint = selectedComplaint ? selectedComplaint.charAt(0).toUpperCase()+selectedComplaint.slice(1) : '—';
+    const description = document.getElementById('complaint-text').value || 'Not provided';
+    const meds = document.getElementById('hist-meds').value || 'None stated';
+    const allergy = document.getElementById('hist-allergy').value || 'NKDA';
+    const bpSys = document.getElementById('v-bp-sys').value;
+    const bpDia = document.getElementById('v-bp-dia').value;
+    const hr = document.getElementById('v-hr').value;
+    const temp = document.getElementById('v-temp').value;
+    const spo2 = document.getElementById('v-spo2').value;
+    const wt = document.getElementById('v-weight').value;
+    const conditions = [...document.querySelectorAll('#conditions-list .check-item.checked')].map(el => el.querySelector('.check-text').textContent);
+    const family = [...document.querySelectorAll('#family-list .check-item.checked')].map(el => el.querySelector('.check-text').textContent);
+    const bp = (bpSys && bpDia) ? `${bpSys}/${bpDia} mmHg` : 'Not measured';
+    const hrStr = hr ? `${hr} bpm` : 'Not measured';
+    const tempStr = temp ? `${temp}°F` : 'Not measured';
+    const spo2Str = spo2 ? `${spo2}%` : 'Not measured';
+    const wtStr = wt ? `${wt} kg` : 'Not measured';
+
+    // Check for critical vitals
+    if (spo2 && parseInt(spo2) < 94) showToast('⚠ Low SpO2 detected — Priority alert sent to doctor');
+    if (bpSys && parseInt(bpSys) > 180) showToast('⚠ High BP detected — Priority alert sent to doctor');
+
+    document.getElementById('ai-summary-content').innerHTML = `
+      <div class="summary-row"><div class="summary-key">Chief Complaint</div><div class="summary-val">${complaint} — ${description.slice(0,120)}${description.length>120?'...':''}</div></div>
+      <div class="summary-row"><div class="summary-key">Vitals</div><div class="summary-val">BP ${bp} · HR ${hrStr} · Temp ${tempStr} · SpO2 ${spo2Str}</div></div>
+      <div class="summary-row"><div class="summary-key">Existing Conditions</div><div class="summary-val">${conditions.length?conditions.join(', '):'None declared'}</div></div>
+      <div class="summary-row"><div class="summary-key">Medications</div><div class="summary-val">${meds}</div></div>
+      <div class="summary-row"><div class="summary-key">Allergies</div><div class="summary-val">${allergy}</div></div>
+    `;
+    document.getElementById('review-sections').innerHTML = `
+      <div class="review-section"><div class="review-section-head"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="review-section-title">Patient Information</div></div><div class="review-section-body"><div class="review-row"><div class="review-key">Full Name</div><div class="review-val">${name}</div></div><div class="review-row"><div class="review-key">Age / Gender</div><div class="review-val">${age} years · ${gender}</div></div><div class="review-row"><div class="review-key">Department</div><div class="review-val">${dept}</div></div><div class="review-row"><div class="review-key">Language</div><div class="review-val">${lang}</div></div></div></div>
+      <div class="review-section"><div class="review-section-head"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="review-section-title">Vitals</div></div><div class="review-section-body"><div class="review-row"><div class="review-key">Blood Pressure</div><div class="review-val">${bp}</div></div><div class="review-row"><div class="review-key">Heart Rate</div><div class="review-val">${hrStr}</div></div><div class="review-row"><div class="review-key">Temperature</div><div class="review-val">${tempStr}</div></div><div class="review-row"><div class="review-key">SpO2</div><div class="review-val">${spo2Str}</div></div><div class="review-row"><div class="review-key">Weight</div><div class="review-val">${wtStr}</div></div></div></div>
+      <div class="review-section"><div class="review-section-head"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M9 12h6"/><path d="M9 16h6"/><path d="M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/></svg><div class="review-section-title">Medical History</div></div><div class="review-section-body"><div class="review-row"><div class="review-key">Conditions</div><div class="review-val">${conditions.length?conditions.join(', '):'None declared'}</div></div><div class="review-row"><div class="review-key">Medications</div><div class="review-val">${meds}</div></div><div class="review-row"><div class="review-key">Allergies</div><div class="review-val">${allergy}</div></div><div class="review-row"><div class="review-key">Family History</div><div class="review-val">${family.length?family.join(', '):'None declared'}</div></div></div></div>
+    `;
+    nextStep();
+  }
+  function submitCase() {
+    const tokenNum = Math.floor(1040 + Math.random() * 20);
+    document.getElementById('token-display').textContent = 'A-' + tokenNum;
+    const dept = document.getElementById('reg-dept').value || 'General Medicine';
+    document.getElementById('token-dept-display').textContent = dept + ' · Floor 2 · OPD Room ' + Math.ceil(Math.random()*5);
+    showToast('Case submitted securely to Dr. Priya Sharma');
+    goToStep(6);
+  }
+  function resetIntake() {
+    currentStep = 0; selectedLang = null; selectedComplaint = null;
+    document.querySelectorAll('.form-input,.form-select,.vital-field').forEach(el => el.value = '');
+    document.querySelectorAll('.lang-card,.complaint-chip').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('.check-item').forEach(el => el.classList.remove('checked'));
+    document.querySelectorAll('.qa-opt').forEach(el => el.classList.remove('selected'));
+    document.getElementById('qa-section').innerHTML = '';
+    document.getElementById('voice-translation').classList.remove('show');
+    const btn = document.getElementById('btn-lang-next');
+    btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+    document.querySelectorAll('.step-panel').forEach(el => el.classList.remove('active'));
+    document.getElementById('step-0').classList.add('active');
+    updateProgress(); updateSidebar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function showToast(msg) {
+    const t = document.getElementById('intake-toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+  // Init
+  updateProgress(); updateSidebar();
+  // Make lang button disabled visually
+  const langBtn = document.getElementById('btn-lang-next');
+  langBtn.style.opacity = '0.5'; langBtn.style.cursor = 'not-allowed';
+</script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediKiosk — OPD Analytics</title>
+  <meta name="description" content="MediKiosk OPD Intelligence — Live analytics, triage trends, and clinical insights for hospital administrators.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    .chart-card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+    .chart-title { font: 700 13px var(--font-heading); color: var(--ink); margin-bottom: 4px; }
+    .chart-sub { font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+    .bar-group { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; }
+    .bar-label { font-size: 11px; color: var(--ink); font-weight: 600; min-width: 110px; }
+    .bar-track { flex: 1; height: 8px; background: var(--line); border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .bar-fill.teal { background: var(--teal); }
+    .bar-fill.blue { background: var(--blue); }
+    .bar-fill.red { background: var(--red); }
+    .bar-fill.green { background: var(--green); }
+    .bar-fill.yellow { background: var(--yellow); }
+    .bar-val { font-size: 11px; font-weight: 700; color: var(--ink); min-width: 30px; text-align: right; }
+    .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .analytics-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .trend-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .trend-row:last-child { border-bottom: none; }
+    .trend-rank { font: 700 11px var(--font-mono); color: var(--muted); min-width: 24px; }
+    .trend-name { font-size: 12px; font-weight: 600; color: var(--ink); flex: 1; }
+    .trend-count { font: 700 12px var(--font-heading); color: var(--teal); }
+    .trend-pct { font-size: 10px; color: var(--muted); }
+    .donut-wrap { display: flex; align-items: center; gap: 20px; }
+    .donut-svg { flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-label { font-size: 11px; color: var(--ink); font-weight: 600; }
+    .legend-pct { font-size: 11px; color: var(--muted); margin-left: auto; }
+    .sparkline-row { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
+    .spark-bar { flex: 1; border-radius: 3px 3px 0 0; transition: all 0.6s; }
+    .spark-bar.teal { background: var(--teal); opacity: 0.7; }
+    .spark-bar.teal:last-child { opacity: 1; }
+    .time-labels { display: flex; gap: 4px; margin-top: 4px; }
+    .time-label { flex: 1; font-size: 9px; color: var(--muted); text-align: center; }
+    .insight-card { background: linear-gradient(135deg, var(--teal-light), #e0f2fe); border: 1px solid #ccede9; border-radius: 14px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
+    .insight-icon { width: 36px; height: 36px; background: var(--teal); color: #fff; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+    .insight-title { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .insight-text { font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .insight-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; background: var(--teal); color: #fff; border-radius: 12px; padding: 3px 10px; font-size: 10px; font-weight: 700; }
+    .heatmap { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+    .heat-cell { height: 20px; border-radius: 4px; cursor: default; transition: opacity 0.2s; }
+    .heat-cell:hover { opacity: 0.8; }
+    .heatmap-labels { display: flex; gap: 0; margin-bottom: 6px; }
+    .heatmap-label { flex: 1; font-size: 9px; color: var(--muted); text-align: center; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font: 700 15px var(--font-heading); color: var(--ink); }
+    .section-badge { background: var(--teal-light); color: var(--teal-dark); border-radius: 20px; padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #ccede9; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" data-testid="main-navigation" role="navigation">
+    <a href="index.html" class="brand" title="MediKiosk OPD Intelligence">
+      <div class="brand-mark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
+      </div>
+      <div><strong>MediKiosk</strong><span>OPD Intelligence</span></div>
+    </a>
+    <a href="index.html" class="back-to-landing"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span>Return to Landing Page</span></a>
+    <div class="facility"><div class="facility-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg></div><div><b>AIIMS New Delhi</b><span>Medicine OPD · Floor 2</span></div></div>
+    <p class="nav-label">Workspace</p>
+    <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Dashboard</span></a>
+    <a href="dashboard.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Patient queue</span></a>
+    <a href="intake.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span>Patient intake</span></a>
+    <a href="casesheet.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg><span>Digital case sheet</span></a>
+    <p class="nav-label nav-spacer">System</p>
+    <a href="analytics.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>OPD analytics</span></a>
+    <a href="privacy.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg><span>Privacy &amp; consent</span></a>
+    <div class="sidebar-bottom">
+      <div class="secure-note"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg><div><b>ABDM secure workspace</b><br><span>Last sync 2 min ago</span></div></div>
+      <div class="profile"><div class="profile-avatar">PS</div><div><b>Dr. Priya Sharma</b><span>Physician · OPD 2</span></div></div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" role="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Tuesday, 18 June 2024 · Morning OPD</p>
+        <h1 class="heading-line">OPD Analytics <span class="sparkle">✦</span></h1>
+      </div>
+      <div class="top-actions">
+        <div class="live-pill"><span class="live-dot"></span><span>Live · Today</span></div>
+        <select style="padding:7px 12px;border:1px solid var(--line);border-radius:8px;font:600 11px var(--font-sans);color:var(--ink);background:var(--paper);outline:none;">
+          <option>Morning OPD (Today)</option>
+          <option>Last 7 days</option>
+          <option>Last 30 days</option>
+        </select>
+        <div class="doctor-avatar" title="Dr. Priya Sharma">PS</div>
+      </div>
+    </header>
+
+    <!-- KPI METRICS -->
+    <section class="metrics-grid" aria-label="OPD analytics KPIs">
+      <div class="metric-card"><div class="metric-header"><div class="metric-icon teal"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><span class="metric-arrow">↗</span></div><div class="metric-label">Total patients today</div><div class="metric-value">47</div><div class="metric-sub">+12% vs. yesterday</div></div>
+      <div class="metric-card"><div class="metric-header"><div class="metric-icon green"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="metric-arrow">↘</span></div><div class="metric-label">Avg. intake time</div><div class="metric-value">3m 42s</div><div class="metric-sub green">↓ 28% vs. last week</div></div>
+      <div class="metric-card"><div class="metric-header"><div class="metric-icon blue"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><span class="metric-arrow">↗</span></div><div class="metric-label">AI accuracy score</div><div class="metric-value">96.2%</div><div class="metric-sub">Dialect comprehension</div></div>
+      <div class="metric-card"><div class="metric-header"><div class="metric-icon red"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><span class="metric-arrow">↗</span></div><div class="metric-label">Priority alerts fired</div><div class="metric-value red" style="color:var(--red)">5</div><div class="metric-sub red">2 currently active</div></div>
+    </section>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="analytics-grid" style="margin-top:0;">
+      <!-- Hourly Volume -->
+      <div class="chart-card">
+        <div class="chart-title">Hourly patient volume</div>
+        <div class="chart-sub">Arrivals by hour · Today</div>
+        <div class="sparkline-row" id="hourly-bars"></div>
+        <div class="time-labels" id="hourly-labels"></div>
+      </div>
+      <!-- Top Complaints -->
+      <div class="chart-card">
+        <div class="chart-title">Top presenting complaints</div>
+        <div class="chart-sub">Ranked by frequency today</div>
+        <div id="complaints-list"></div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="analytics-grid">
+      <!-- Language distribution -->
+      <div class="chart-card">
+        <div class="chart-title">Language distribution</div>
+        <div class="chart-sub">Patient intake languages today</div>
+        <div class="bar-group" id="lang-bars"></div>
+      </div>
+      <!-- Department load -->
+      <div class="chart-card">
+        <div class="chart-title">Department load</div>
+        <div class="chart-sub">Patients per department today</div>
+        <div class="bar-group" id="dept-bars"></div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 3 -->
+    <div class="analytics-grid">
+      <!-- Triage status donut -->
+      <div class="chart-card">
+        <div class="chart-title">Triage status breakdown</div>
+        <div class="chart-sub">Patient status distribution</div>
+        <div class="donut-wrap">
+          <svg class="donut-svg" width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="45" fill="none" stroke="var(--line)" stroke-width="18"/>
+            <!-- Priority: 11% -->
+            <circle cx="60" cy="60" r="45" fill="none" stroke="var(--red)" stroke-width="18" stroke-dasharray="31 252" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+            <!-- Intake: 26% -->
+            <circle cx="60" cy="60" r="45" fill="none" stroke="var(--yellow)" stroke-width="18" stroke-dasharray="73 252" stroke-dashoffset="-31" transform="rotate(-90 60 60)"/>
+            <!-- Ready: 40% -->
+            <circle cx="60" cy="60" r="45" fill="none" stroke="var(--teal)" stroke-width="18" stroke-dasharray="113 252" stroke-dashoffset="-104" transform="rotate(-90 60 60)"/>
+            <!-- Done: 23% -->
+            <circle cx="60" cy="60" r="45" fill="none" stroke="var(--green)" stroke-width="18" stroke-dasharray="65 252" stroke-dashoffset="-217" transform="rotate(-90 60 60)"/>
+            <text x="60" y="55" text-anchor="middle" font-family="Outfit" font-weight="800" font-size="18" fill="var(--ink)">47</text>
+            <text x="60" y="70" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="9" fill="var(--muted)">patients</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div><span class="legend-label">Priority</span><span class="legend-pct" style="margin-left:12px;font-weight:700;color:var(--red)">5 · 11%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div><span class="legend-label">In intake</span><span class="legend-pct" style="margin-left:12px;font-weight:700;color:var(--yellow)">12 · 26%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div><span class="legend-label">Ready</span><span class="legend-pct" style="margin-left:12px;font-weight:700;color:var(--teal)">19 · 40%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div><span class="legend-label">Seen / Done</span><span class="legend-pct" style="margin-left:12px;font-weight:700;color:var(--green)">11 · 23%</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- Mode distribution -->
+      <div class="chart-card">
+        <div class="chart-title">Allopathic vs AYUSH intake</div>
+        <div class="chart-sub">Mode selection by patients today</div>
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:600;color:var(--ink);">Allopathic</span>
+            <span style="font:700 14px var(--font-heading);color:var(--blue);">31 · 66%</span>
+          </div>
+          <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:16px;"><div style="height:100%;width:66%;background:var(--blue);border-radius:6px;"></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:600;color:var(--ink);">AYUSH</span>
+            <span style="font:700 14px var(--font-heading);color:var(--teal);">16 · 34%</span>
+          </div>
+          <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:20px;"><div style="height:100%;width:34%;background:var(--teal);border-radius:6px;"></div></div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">AYUSH specialties</div>
+        <div class="bar-group">
+          <div class="bar-row"><span class="bar-label">Ayurveda</span><div class="bar-track"><div class="bar-fill teal" style="width:75%"></div></div><span class="bar-val">12</span></div>
+          <div class="bar-row"><span class="bar-label">Yoga / Naturopath</span><div class="bar-track"><div class="bar-fill teal" style="width:19%"></div></div><span class="bar-val">3</span></div>
+          <div class="bar-row"><span class="bar-label">Unani</span><div class="bar-track"><div class="bar-fill teal" style="width:6%"></div></div><span class="bar-val">1</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI INSIGHTS -->
+    <div class="section-head" style="margin-top:4px;">
+      <div class="section-title">AI Clinical Insights</div>
+      <span class="section-badge">Auto-generated · Today</span>
+    </div>
+    <div class="analytics-grid three" style="margin-bottom:24px;">
+      <div class="insight-card">
+        <div class="insight-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+        <div>
+          <div class="insight-title">Peak hour: 9–10 AM</div>
+          <div class="insight-text">38% of today's patients arrived in the first hour. Consider deploying an extra kiosk terminal between 8:30–10 AM tomorrow.</div>
+          <div class="insight-badge">⚡ Action recommended</div>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+        <div>
+          <div class="insight-title">Top complaint: Chest pain</div>
+          <div class="insight-text">5 patients today presented with chest-related symptoms. 3 were flagged as priority. Cardiac workload trending up this week (+40%).</div>
+          <div class="insight-badge">🫀 Monitor trend</div>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
+        <div>
+          <div class="insight-title">Hindi most used (52%)</div>
+          <div class="insight-text">Hindi dominates intake today. Dialect comprehension at 98.4%. Consider bilingual nurse facilitator training for Marathi patients (8 today).</div>
+          <div class="insight-badge">🌐 Language insight</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEKLY HEATMAP -->
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="section-head" style="margin-bottom:8px;">
+        <div>
+          <div class="chart-title">OPD load heatmap — last 7 days</div>
+          <div class="chart-sub">Patient volume by hour and day</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;">
+        <div style="display:flex;flex-direction:column;gap:4px;padding-top:20px;">
+          <div style="height:20px;font-size:9px;color:var(--muted);text-align:right;line-height:20px;">Mon</div>
+          <div style="height:20px;font-size:9px;color:var(--muted);text-align:right;line-height:20px;">Tue</div>
+          <div style="height:20px;font-size:9px;color:var(--muted);text-align:right;line-height:20px;">Wed</div>
+          <div style="height:20px;font-size:9px;color:var(--muted);text-align:right;line-height:20px;">Thu</div>
+          <div style="height:20px;font-size:9px;color:var(--muted);text-align:right;line-height:20px;">Fri</div>
+          <div style="height:20px;font-size:9px;color:var(--muted);text-align:right;line-height:20px;">Sat</div>
+          <div style="height:20px;font-size:9px;color:var(--muted);text-align:right;line-height:20px;">Sun</div>
+        </div>
+        <div style="flex:1;">
+          <div class="heatmap-labels" id="hm-hours"></div>
+          <div id="heatmap-grid" style="display:flex;flex-direction:column;gap:4px;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Hourly bars
+  const hours = ['8','9','10','11','12','1','2','3'];
+  const vols = [5, 18, 14, 8, 4, 6, 9, 3];
+  const max = Math.max(...vols);
+  const hb = document.getElementById('hourly-bars');
+  const hl = document.getElementById('hourly-labels');
+  hours.forEach((h, i) => {
+    const b = document.createElement('div');
+    b.className = 'spark-bar teal';
+    b.style.height = Math.max(6, (vols[i]/max)*48) + 'px';
+    b.title = h + ':00 — ' + vols[i] + ' patients';
+    hb.appendChild(b);
+    const l = document.createElement('div');
+    l.className = 'time-label';
+    l.textContent = h;
+    hl.appendChild(l);
+  });
+
+  // Complaints list
+  const complaints = [
+    { name:'Chest pain / Breathlessness', count:9, pct:19 },
+    { name:'Fever / Infection', count:8, pct:17 },
+    { name:'Fatigue / Weakness', count:7, pct:15 },
+    { name:'Diabetes / BP follow-up', count:6, pct:13 },
+    { name:'Stomach / Digestion', count:5, pct:11 },
+    { name:'Joint / Bone pain', count:4, pct:9 },
+    { name:'Headache / Migraine', count:4, pct:9 },
+    { name:'Skin / Allergy', count:3, pct:6 }
+  ];
+  const cl = document.getElementById('complaints-list');
+  const colors = ['var(--red)','var(--yellow)','var(--teal)','var(--blue)','var(--green)','var(--teal)','var(--blue)','var(--yellow)'];
+  complaints.forEach((c, i) => {
+    cl.innerHTML += `<div class="trend-row">
+      <div class="trend-rank">${String(i+1).padStart(2,'0')}</div>
+      <div class="trend-name">${c.name}</div>
+      <div class="trend-count" style="color:${colors[i]}">${c.count}</div>
+      <div class="trend-pct">${c.pct}%</div>
+    </div>`;
+  });
+
+  // Language bars
+  const langs = [
+    { name:'Hindi', count:24, pct:52, color:'var(--teal)' },
+    { name:'English', count:9, pct:19, color:'var(--blue)' },
+    { name:'Marathi', count:6, pct:13, color:'var(--green)' },
+    { name:'Kannada', count:4, pct:9, color:'var(--yellow)' },
+    { name:'Bengali', count:4, pct:9, color:'var(--red)' }
+  ];
+  const lb = document.getElementById('lang-bars');
+  langs.forEach(l => {
+    lb.innerHTML += `<div class="bar-row"><span class="bar-label">${l.name}</span><div class="bar-track"><div class="bar-fill" style="width:${l.pct}%;background:${l.color}"></div></div><span class="bar-val">${l.count}</span></div>`;
+  });
+
+  // Department bars
+  const depts = [
+    { name:'General Medicine', count:26, pct:55, color:'var(--teal)' },
+    { name:'Ayurveda OPD', count:12, pct:26, color:'var(--green)' },
+    { name:'Cardiology', count:5, pct:11, color:'var(--red)' },
+    { name:'Orthopedics', count:4, pct:9, color:'var(--yellow)' }
+  ];
+  const db = document.getElementById('dept-bars');
+  depts.forEach(d => {
+    db.innerHTML += `<div class="bar-row"><span class="bar-label" style="min-width:130px">${d.name}</span><div class="bar-track"><div class="bar-fill" style="width:${d.pct}%;background:${d.color}"></div></div><span class="bar-val">${d.count}</span></div>`;
+  });
+
+  // Heatmap
+  const hmHours = ['8','9','10','11','12','13','14','15','16','17','18','19'];
+  const hmHoursEl = document.getElementById('hm-hours');
+  hmHours.forEach(h => { hmHoursEl.innerHTML += `<div class="heatmap-label">${h}</div>`; });
+  const heatData = [
+    [2,8,12,9,4,2,5,8,6,3,1,0],
+    [3,18,14,8,4,6,9,7,5,2,1,0],
+    [1,10,16,11,5,3,7,9,8,4,2,0],
+    [4,14,18,10,6,4,6,8,7,3,1,0],
+    [2,12,15,9,5,3,5,7,6,2,1,0],
+    [1,6,8,5,2,1,3,4,3,1,0,0],
+    [0,3,4,2,1,0,1,2,1,0,0,0]
+  ];
+  const hmMax = 18;
+  const hmGrid = document.getElementById('heatmap-grid');
+  heatData.forEach(row => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'heatmap';
+    row.forEach(v => {
+      const cell = document.createElement('div');
+      cell.className = 'heat-cell';
+      const intensity = v / hmMax;
+      const r = Math.round(13 + (220-13)*intensity);
+      const g = Math.round(148 + (200-148)*(1-intensity));
+      const b2 = Math.round(136 + (200-136)*(1-intensity));
+      cell.style.background = v === 0 ? 'var(--line)' : `rgba(13,148,136,${0.1 + intensity*0.9})`;
+      cell.title = v + ' patients';
+      rowEl.appendChild(cell);
+    });
+    hmGrid.appendChild(rowEl);
+  });
+</script>
+</body>
+</html>
