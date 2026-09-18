@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — DocSee Clinical Portal</title>
+  <meta name="description" content="Sign in to DocSee OPD Clinical Intelligence and Hospital Intake Portal.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ea580c'><circle cx='12' cy='12' r='10'/><path d='M12 7v10M7 12h10' stroke='white' stroke-width='2.5' stroke-linecap='round'/></svg>">
+  
+  <!-- Preconnect & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Instrument+Serif:ital@0;1&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="dashboard.css">
+
+  <style>
+    :root {
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-code: 'Space Mono', monospace;
+      --color-cream: #fbf8f3;
+      --color-ink: #1c1917;
+      --color-terracotta: #ea580c;
+      --color-teal: #0d9488;
+      --color-border: #e7e5e4;
+    }
+
+    body {
+      background-color: var(--color-cream);
+      color: var(--color-ink);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Subtle paper noise texture */
+    .bg-texture {
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(#d6d3d1 0.75px, transparent 0.75px);
+      background-size: 24px 24px;
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 40px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--color-ink);
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--color-teal);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+    }
+
+    .brand-title {
+      font: 700 20px var(--font-body);
+      letter-spacing: -0.5px;
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 20px 60px;
+    }
+
+    .login-card {
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      padding: 40px 36px;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
+      animation: cardAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes cardAppear {
+      from { opacity: 0; transform: translateY(16px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .kicker-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-teal);
+      background: #f0fdfa;
+      border: 1px solid #ccede9;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+
+    .login-title {
+      font: 400 34px/1.15 var(--font-display);
+      color: var(--color-ink);
+      margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+      font-size: 13px;
+      color: #78716c;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    /* Auth Switch Tabs */
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #f5f5f4;
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      border: 1px solid #e7e5e4;
+    }
+
+    .auth-tab-btn {
+      padding: 9px 14px;
+      font: 600 12px var(--font-body);
+      color: #78716c;
+      border: none;
+      background: transparent;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-tab-btn.active {
+      background: #ffffff;
+      color: var(--color-ink);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Google Button */
+    .btn-google {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #ffffff;
+      border: 1.5px solid #e7e5e4;
+      border-radius: 12px;
+      padding: 13px 20px;
+      font: 600 14px var(--font-body);
+      color: #292524;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+
+    .btn-google:hover {
+      background: #fafaf9;
+      border-color: #d6d3d1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .divider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0;
+      color: #a8a29e;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 700;
+    }
+
+    .divider-row::before, .divider-row::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e7e5e4;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin-bottom: 6px;
+    }
+
+    .phone-input-wrap {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid #e7e5e4;
+      border-radius: 12px;
+      background: #ffffff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      overflow: hidden;
+    }
+
+    .phone-input-wrap:focus-within {
+      border-color: var(--color-teal);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    }
+
+    .country-code {
+      padding: 12px 14px;
+      font: 600 13px var(--font-code);
+      color: #57534e;
+      background: #f5f5f4;
+      border-right: 1px solid #e7e5e4;
+      user-select: none;
+    }
+
+    .phone-field {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 12px 14px;
+      font: 500 14px var(--font-body);
+      color: var(--color-ink);
+    }
+
+    /* OTP Boxes */
+    .otp-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .otp-input {
+      width: 100%;
+      height: 48px;
+      text-align: center;
+      font: 700 20px var(--font-code);
+      border: 1.5px solid #e7e5e4;
+      border-radius: 10px;
+      background: #fafaf9;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .otp-input:focus {
+      border-color: var(--color-teal);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--color-teal);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font: 700 14px var(--font-body);
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(13, 148, 136, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+      background: #0f766e;
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .resend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      font-size: 11px;
+      color: #78716c;
+    }
+
+    .resend-btn {
+      background: none;
+      border: none;
+      color: var(--color-teal);
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .resend-btn:hover {
+      text-decoration: underline;
+    }
+
+    .security-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid #f5f5f4;
+      font-size: 11px;
+      color: #a8a29e;
+    }
+
+    .security-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .quick-role-note {
+      background: #f0fdfa;
+      border: 1px solid #ccede9;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-top: 18px;
+      font-size: 11px;
+      color: #0f766e;
+      line-height: 1.4;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Toast */
+    .login-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1c1917;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .login-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-texture"></div>
+
+  <!-- NAVIGATION -->
+  <header class="login-nav">
+    <a href="index.html" class="brand-link">
+      <div class="brand-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
+      </div>
+      <span class="brand-title">DocSee</span>
+    </a>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="intake.html" style="text-decoration: none; font-size: 12px; font-weight: 700; color: #78716c; padding: 7px 14px; border-radius: 8px; border: 1px solid #e7e5e4; background: #fff;">Patient Kiosk</a>
+      <a href="index.html" style="text-decoration: none; font-size: 12px; font-weight: 600; color: var(--color-ink); display: flex; align-items: center; gap: 4px;">
+        <span>Return Home</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- LOGIN FORM CARD -->
+  <main class="login-container">
+    <div class="login-card">
+      <div class="kicker-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+        Clinical Access
+      </div>
+      
+      <h1 class="login-title">Welcome to DocSee</h1>
+      <p class="login-subtitle">Sign in to your clinician dashboard to access real-time OPD queues, patient triage timelines, and digital case sheets.</p>
+
+      <!-- AUTH TABS -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tab-google" onclick="switchTab('google')">Google Sign-In</button>
+        <button class="auth-tab-btn" id="tab-phone" onclick="switchTab('phone')">Mobile &amp; OTP</button>
+      </div>
+
+      <!-- GOOGLE AUTH PANEL -->
+      <div id="panel-google">
+        <button class="btn-google" id="btn-google-login" onclick="handleGoogleLogin()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <div class="quick-role-note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          <span>Instant access for verified clinicians · AIIMS OPD Medicine Department</span>
+        </div>
+      </div>
+
+      <!-- PHONE & OTP PANEL -->
+      <div id="panel-phone" style="display: none;">
+        <div id="phone-step-1">
+          <div class="form-group">
+            <label class="form-label">Registered Mobile Number</label>
+            <div class="phone-input-wrap">
+              <span class="country-code">+91</span>
+              <input type="tel" id="input-phone" class="phone-field" placeholder="98765 43210" maxlength="10">
+            </div>
+          </div>
+          <button class="btn-submit" onclick="sendOtp()">
+            <span>Send OTP Code</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <div id="phone-step-2" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Enter 6-Digit OTP</label>
+            <p style="font-size: 11px; color: #78716c; margin-bottom: 8px;">Code sent to <span id="display-sent-phone" style="font-weight: 700; color: var(--color-ink);">+91 98765 43210</span></p>
+            <div class="otp-grid">
+              <input type="text" class="otp-input" maxlength="1" oninput="handleOtpInput(this, 0)" onkeydown="handleOtpKey(event, 0)">
+              <input type="text" class="otp-input" maxlength="1" oninput="handleOtpInput(this, 1)" onkeydown="handleOtpKey(event, 1)">
+              <input type="text" class="otp-input" maxlength="1" oninput="handleOtpInput(this, 2)" onkeydown="handleOtpKey(event, 2)">
+              <input type="text" class="otp-input" maxlength="1" oninput="handleOtpInput(this, 3)" onkeydown="handleOtpKey(event, 3)">
+              <input type="text" class="otp-input" maxlength="1" oninput="handleOtpInput(this, 4)" onkeydown="handleOtpKey(event, 4)">
+              <input type="text" class="otp-input" maxlength="1" oninput="handleOtpInput(this, 5)" onkeydown="handleOtpKey(event, 5)">
+            </div>
+          </div>
+
+          <div class="resend-row">
+            <span>Didn't receive code?</span>
+            <button class="resend-btn" onclick="resendOtp()">Resend OTP</button>
+          </div>
+
+          <button class="btn-submit" onclick="verifyOtp()">
+            <span>Verify &amp; Access Dashboard</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- SECURITY FOOTER -->
+      <div class="security-badge">
+        <div class="security-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+          <span>ABDM Verified</span>
+        </div>
+        <span>•</span>
+        <div class="security-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>256-bit SSL</span>
+        </div>
+        <span>•</span>
+        <div class="security-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          <span>DPDP Compliant</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- TOAST -->
+  <div class="login-toast" id="login-toast">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+    <span id="toast-text">Signed in successfully</span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+
+  <script>
+    function showToast(msg) {
+      const toast = document.getElementById('login-toast');
+      document.getElementById('toast-text').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      if (tab === 'google') {
+        document.getElementById('panel-google').style.display = 'block';
+        document.getElementById('panel-phone').style.display = 'none';
+      } else {
+        document.getElementById('panel-google').style.display = 'none';
+        document.getElementById('panel-phone').style.display = 'block';
+      }
+    }
+
+    // Google Login
+    function handleGoogleLogin() {
+      const btn = document.getElementById('btn-google-login');
+      btn.innerHTML = `
+        <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <span>Connecting to Google...</span>
+      `;
+
+      // Save Clinician session
+      const doctorUser = {
+        name: "Dr. Priya Sharma",
+        email: "priya.sharma@aiims.edu",
+        role: "Attending Physician",
+        department: "General Medicine OPD",
+        authMethod: "Google OAuth",
+        avatar: "PS",
+        loginTime: new Date().toISOString()
+      };
+
+      localStorage.setItem('DOCSEE_USER_SESSION', JSON.stringify(doctorUser));
+
+      setTimeout(() => {
+        showToast("✓ Welcome, Dr. Priya Sharma! Redirecting to OPD Dashboard...");
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 800);
+      }, 900);
+    }
+
+    // Phone + OTP Login
+    function sendOtp() {
+      const phone = document.getElementById('input-phone').value.trim();
+      if (!phone || phone.length < 10) {
+        showToast("⚠️ Please enter a valid 10-digit mobile number");
+        return;
+      }
+
+      document.getElementById('display-sent-phone').textContent = `+91 ${phone}`;
+      document.getElementById('phone-step-1').style.display = 'none';
+      document.getElementById('phone-step-2').style.display = 'block';
+
+      // Auto-focus first OTP box
+      const inputs = document.querySelectorAll('.otp-input');
+      inputs.forEach(i => i.value = '');
+      inputs[0].focus();
+
+      showToast(`🔑 OTP code sent via SMS to +91 ${phone} (Demo Code: 123456)`);
+    }
+
+    function handleOtpInput(input, index) {
+      if (input.value && index < 5) {
+        document.querySelectorAll('.otp-input')[index + 1].focus();
+      }
+    }
+
+    function handleOtpKey(e, index) {
+      if (e.key === 'Backspace' && !e.target.value && index > 0) {
+        document.querySelectorAll('.otp-input')[index - 1].focus();
+      }
+    }
+
+    function resendOtp() {
+      showToast("🔄 New OTP code sent to your registered mobile number");
+    }
+
+    function verifyOtp() {
+      const inputs = document.querySelectorAll('.otp-input');
+      const code = Array.from(inputs).map(i => i.value).join('');
+      const phone = document.getElementById('input-phone').value.trim() || "9876543210";
+
+      if (code.length < 6) {
+        showToast("⚠️ Please enter the complete 6-digit OTP code");
+        return;
+      }
+
+      const doctorUser = {
+        name: "Dr. Priya Sharma",
+        phone: "+91 " + phone,
+        role: "Attending Physician",
+        department: "General Medicine OPD",
+        authMethod: "Mobile OTP",
+        avatar: "PS",
+        loginTime: new Date().toISOString()
+      };
+
+      localStorage.setItem('DOCSEE_USER_SESSION', JSON.stringify(doctorUser));
+
+      showToast("✓ OTP verified successfully! Entering dashboard...");
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 750);
+    }
+  </script>
+</body>
+</html>
